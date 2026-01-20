@@ -366,6 +366,7 @@ export default function WebsetDetailPage() {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [isLoading, setIsLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('People: sales managers in Taiwan, enterprise solutions, under...');
+  const [selectedItem, setSelectedItem] = useState<WebsetItem | null>(null);
 
   // Modal states
   const [showFilterModal, setShowFilterModal] = useState(false);
@@ -632,6 +633,8 @@ const pollResults = async (websetId) => {
             criteria={criteria}
             isLoading={isLoading}
             onSelectionChange={(selected) => setSelectedIds(selected)}
+            onRowClick={(item) => setSelectedItem(item)}
+            selectedRowId={selectedItem?.id}
           />
 
           {/* Footer */}
@@ -646,6 +649,13 @@ const pollResults = async (websetId) => {
           onEnrichmentsChange={setEnrichments}
           itemCount={filteredItems.length}
           matchCount={filteredItems.length}
+          selectedPerson={selectedItem && selectedItem.properties.type === 'person' ? {
+            name: selectedItem.properties.name || '',
+            position: selectedItem.properties.position,
+            company: selectedItem.properties.company?.name,
+            location: selectedItem.properties.location,
+            url: selectedItem.url,
+          } : null}
         />
       </div>
 

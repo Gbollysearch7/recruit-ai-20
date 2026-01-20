@@ -15,7 +15,7 @@ export default function RootLayout({
     <html lang="en">
       <head>
         <link
-          href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined"
+          href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined|Material+Icons"
           rel="stylesheet"
         />
       </head>

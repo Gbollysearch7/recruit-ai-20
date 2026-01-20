@@ -2,18 +2,6 @@
 
 import { AppLayout } from '@/components/AppLayout';
 import Link from 'next/link';
-import {
-  Search,
-  Users,
-  TrendingUp,
-  Clock,
-  ArrowRight,
-  Plus,
-  ExternalLink,
-  Sparkles,
-  ChevronRight,
-  Activity
-} from 'lucide-react';
 
 // Mock data for demonstration
 const recentSearches = [
@@ -50,18 +38,18 @@ const topCandidates = [
 export default function DashboardPage() {
   return (
     <AppLayout>
-      <div className="space-y-8">
+      <div className="space-y-6">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-semibold text-[var(--text-primary)] tracking-tight">Dashboard</h1>
-            <p className="text-[var(--text-secondary)] mt-1">Welcome back! Here's your recruiting overview.</p>
+            <h1 className="text-xl font-semibold text-[var(--text-primary)] tracking-tight">Dashboard</h1>
+            <p className="text-sm text-[var(--text-secondary)] mt-0.5">Welcome back! Here's your recruiting overview.</p>
           </div>
           <Link
             href="/search"
-            className="inline-flex items-center gap-2 px-4 py-2.5 bg-[var(--accent)] text-white text-sm font-medium rounded-lg hover:bg-[var(--accent-hover)] transition-all shadow-sm hover:shadow-md"
+            className="btn btn-primary"
           >
-            <Sparkles className="w-4 h-4" />
+            <span className="material-icons-outlined text-sm">auto_awesome</span>
             New Search
           </Link>
         </div>
@@ -69,42 +57,42 @@ export default function DashboardPage() {
         {/* Stats Cards */}
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {[
-            { label: 'Total Searches', value: '24', change: '+3 this week', icon: Search, color: 'accent' },
-            { label: 'Candidates Found', value: '847', change: '+156 this week', icon: Users, color: 'success' },
-            { label: 'Avg. Match Rate', value: '94%', change: '+2% vs last month', icon: TrendingUp, color: 'warning' },
-            { label: 'Time Saved', value: '48h', change: 'This month', icon: Clock, color: 'accent' },
+            { label: 'Total Searches', value: '24', change: '+3 this week', icon: 'search', color: 'primary' },
+            { label: 'Candidates Found', value: '847', change: '+156 this week', icon: 'group', color: 'success' },
+            { label: 'Avg. Match Rate', value: '94%', change: '+2% vs last month', icon: 'trending_up', color: 'warning' },
+            { label: 'Time Saved', value: '48h', change: 'This month', icon: 'schedule', color: 'primary' },
           ].map((stat, i) => (
-            <div key={i} className="bg-[var(--bg-elevated)] rounded-xl border border-[var(--border-light)] p-5 hover:shadow-[var(--shadow-md)] transition-shadow">
-              <div className="flex items-center justify-between mb-4">
-                <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
-                  stat.color === 'accent' ? 'bg-[var(--accent-light)]' :
-                  stat.color === 'success' ? 'bg-[var(--success-light)]' :
-                  'bg-[var(--warning-light)]'
+            <div key={i} className="bg-[var(--bg-elevated)] rounded-lg border border-[var(--border-light)] p-4 hover:shadow-[var(--shadow-sm)] transition-shadow">
+              <div className="flex items-center justify-between mb-3">
+                <div className={`w-8 h-8 rounded-md flex items-center justify-center ${
+                  stat.color === 'primary' ? 'bg-[var(--primary-light)]' :
+                  stat.color === 'success' ? 'bg-[var(--success-bg)]' :
+                  'bg-[var(--warning-bg)]'
                 }`}>
-                  <stat.icon className={`w-5 h-5 ${
-                    stat.color === 'accent' ? 'text-[var(--accent)]' :
+                  <span className={`material-icons-outlined text-base ${
+                    stat.color === 'primary' ? 'text-[var(--primary)]' :
                     stat.color === 'success' ? 'text-[var(--success)]' :
                     'text-[var(--warning)]'
-                  }`} />
+                  }`}>{stat.icon}</span>
                 </div>
-                <Activity className="w-4 h-4 text-[var(--text-muted)]" />
+                <span className="material-icons-outlined text-sm text-[var(--text-muted)]">show_chart</span>
               </div>
-              <div className="text-2xl font-semibold text-[var(--text-primary)] mb-1 tracking-tight">{stat.value}</div>
-              <div className="text-sm text-[var(--text-tertiary)]">{stat.label}</div>
-              <div className="text-xs text-[var(--success)] mt-2 font-medium">{stat.change}</div>
+              <div className="text-xl font-semibold text-[var(--text-primary)] mb-0.5 tracking-tight">{stat.value}</div>
+              <div className="text-xs text-[var(--text-tertiary)]">{stat.label}</div>
+              <div className="text-xs text-[var(--success)] mt-1.5 font-medium">{stat.change}</div>
             </div>
           ))}
         </div>
 
         {/* Main Content Grid */}
-        <div className="grid lg:grid-cols-3 gap-6">
+        <div className="grid lg:grid-cols-3 gap-4">
           {/* Recent Searches */}
-          <div className="lg:col-span-2 bg-[var(--bg-elevated)] rounded-xl border border-[var(--border-light)] overflow-hidden">
-            <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--border-light)]">
-              <h2 className="font-semibold text-[var(--text-primary)]">Recent Searches</h2>
-              <Link href="/searches" className="text-sm text-[var(--accent)] hover:text-[var(--accent-hover)] flex items-center gap-1 font-medium transition-colors">
+          <div className="lg:col-span-2 bg-[var(--bg-elevated)] rounded-lg border border-[var(--border-light)] overflow-hidden">
+            <div className="flex items-center justify-between px-4 py-3 border-b border-[var(--border-light)]">
+              <h2 className="text-sm font-semibold text-[var(--text-primary)]">Recent Searches</h2>
+              <Link href="/searches" className="text-xs text-[var(--primary)] hover:text-[var(--primary-hover)] flex items-center gap-0.5 font-medium transition-colors">
                 View all
-                <ChevronRight className="w-4 h-4" />
+                <span className="material-icons-outlined text-sm">chevron_right</span>
               </Link>
             </div>
             <div className="divide-y divide-[var(--border-light)]">
@@ -112,23 +100,23 @@ export default function DashboardPage() {
                 <Link
                   key={search.id}
                   href={`/searches/${search.id}`}
-                  className="flex items-center justify-between px-5 py-4 hover:bg-[var(--bg-secondary)] transition-colors group"
+                  className="flex items-center justify-between px-4 py-3 hover:bg-[var(--bg-surface)] transition-colors group"
                 >
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-[var(--text-primary)] truncate group-hover:text-[var(--accent)] transition-colors">
+                    <p className="text-xs font-medium text-[var(--text-primary)] truncate group-hover:text-[var(--primary)] transition-colors">
                       {search.query}
                     </p>
-                    <p className="text-xs text-[var(--text-muted)] mt-1">{search.createdAt}</p>
+                    <p className="text-[10px] text-[var(--text-muted)] mt-0.5">{search.createdAt}</p>
                   </div>
-                  <div className="flex items-center gap-4 ml-4">
-                    <span className="text-sm text-[var(--text-secondary)] font-medium">{search.results} results</span>
-                    <span className={`px-2.5 py-1 text-xs font-medium rounded-full ${
+                  <div className="flex items-center gap-3 ml-4">
+                    <span className="text-xs text-[var(--text-secondary)] font-medium">{search.results} results</span>
+                    <span className={`px-2 py-0.5 text-[10px] font-medium rounded ${
                       search.status === 'completed'
-                        ? 'bg-[var(--success-light)] text-[var(--success)]'
-                        : 'bg-[var(--accent-light)] text-[var(--accent)]'
+                        ? 'bg-[var(--success-bg)] text-[var(--success-text)]'
+                        : 'bg-[var(--primary-light)] text-[var(--primary)]'
                     }`}>
                       {search.status === 'running' && (
-                        <span className="inline-block w-1.5 h-1.5 rounded-full bg-current mr-1.5 animate-pulse" />
+                        <span className="inline-block w-1 h-1 rounded-full bg-current mr-1 animate-pulse" />
                       )}
                       {search.status}
                     </span>
@@ -139,60 +127,60 @@ export default function DashboardPage() {
           </div>
 
           {/* Top Candidates */}
-          <div className="bg-[var(--bg-elevated)] rounded-xl border border-[var(--border-light)] overflow-hidden">
-            <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--border-light)]">
-              <h2 className="font-semibold text-[var(--text-primary)]">Top Matches</h2>
+          <div className="bg-[var(--bg-elevated)] rounded-lg border border-[var(--border-light)] overflow-hidden">
+            <div className="flex items-center justify-between px-4 py-3 border-b border-[var(--border-light)]">
+              <h2 className="text-sm font-semibold text-[var(--text-primary)]">Top Matches</h2>
             </div>
             <div className="divide-y divide-[var(--border-light)]">
               {topCandidates.map((candidate, i) => (
-                <div key={i} className="px-5 py-3.5 hover:bg-[var(--bg-secondary)] transition-colors cursor-pointer group">
+                <div key={i} className="px-4 py-3 hover:bg-[var(--bg-surface)] transition-colors cursor-pointer group">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[var(--accent)] to-[var(--accent-hover)] flex items-center justify-center text-white text-sm font-medium shadow-sm">
+                    <div className="w-8 h-8 rounded-md bg-[var(--primary)] flex items-center justify-center text-white text-xs font-medium">
                       {candidate.name.split(' ').map(n => n[0]).join('')}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-[var(--text-primary)] group-hover:text-[var(--accent)] transition-colors">
+                      <p className="text-xs font-medium text-[var(--text-primary)] group-hover:text-[var(--primary)] transition-colors">
                         {candidate.name}
                       </p>
-                      <p className="text-xs text-[var(--text-tertiary)]">
+                      <p className="text-[10px] text-[var(--text-tertiary)]">
                         {candidate.position} at {candidate.company}
                       </p>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm font-semibold text-[var(--success)]">{candidate.match}%</span>
-                      <ExternalLink className="w-4 h-4 text-[var(--text-muted)] opacity-0 group-hover:opacity-100 transition-opacity" />
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-xs font-semibold text-[var(--success)]">{candidate.match}%</span>
+                      <span className="material-icons-outlined text-sm text-[var(--text-muted)] opacity-0 group-hover:opacity-100 transition-opacity">open_in_new</span>
                     </div>
                   </div>
                 </div>
               ))}
             </div>
-            <div className="px-5 py-3 border-t border-[var(--border-light)] bg-[var(--bg-secondary)]">
+            <div className="px-4 py-2.5 border-t border-[var(--border-light)] bg-[var(--bg-surface)]">
               <Link
                 href="/search"
-                className="text-sm text-[var(--accent)] hover:text-[var(--accent-hover)] flex items-center gap-1 font-medium transition-colors"
+                className="text-xs text-[var(--primary)] hover:text-[var(--primary-hover)] flex items-center gap-1 font-medium transition-colors"
               >
                 Find more candidates
-                <ArrowRight className="w-3.5 h-3.5" />
+                <span className="material-icons-outlined text-sm">arrow_forward</span>
               </Link>
             </div>
           </div>
         </div>
 
-        {/* Quick Actions */}
-        <div className="bg-gradient-to-r from-[var(--accent)] to-[var(--accent-hover)] rounded-xl p-6 text-white shadow-lg">
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        {/* Quick Actions Banner */}
+        <div className="bg-[var(--primary)] rounded-lg p-4 text-white">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
             <div>
-              <h3 className="text-lg font-semibold mb-1">Ready to find your next hire?</h3>
-              <p className="text-white/80 text-sm">
+              <h3 className="text-sm font-semibold mb-0.5">Ready to find your next hire?</h3>
+              <p className="text-white/80 text-xs">
                 Describe your ideal candidate and let AI do the heavy lifting.
               </p>
             </div>
             <Link
               href="/search"
-              className="inline-flex items-center gap-2 px-5 py-2.5 bg-white text-[var(--accent)] text-sm font-semibold rounded-lg hover:bg-white/90 transition-colors whitespace-nowrap shadow-sm"
+              className="inline-flex items-center gap-1.5 px-4 py-2 bg-white text-[var(--primary)] text-xs font-semibold rounded-md hover:bg-white/90 transition-colors whitespace-nowrap"
             >
               Start Searching
-              <ArrowRight className="w-4 h-4" />
+              <span className="material-icons-outlined text-sm">arrow_forward</span>
             </Link>
           </div>
         </div>

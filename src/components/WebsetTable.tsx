@@ -8,6 +8,8 @@ interface WebsetTableProps {
   criteria: string[];
   isLoading?: boolean;
   onSelectionChange?: (selectedIds: Set<string>) => void;
+  onRowClick?: (item: WebsetItem) => void;
+  selectedRowId?: string | null;
 }
 
 type MatchStatus = 'Match' | 'Miss' | 'Unclear';
@@ -37,7 +39,7 @@ function getReferenceCount(seed: number) {
 // Criteria colors matching the design
 const criteriaColors = ['bg-purple-500', 'bg-orange-500', 'bg-blue-500', 'bg-slate-300'];
 
-export function WebsetTable({ items, criteria, isLoading, onSelectionChange }: WebsetTableProps) {
+export function WebsetTable({ items, criteria, isLoading, onSelectionChange, onRowClick, selectedRowId }: WebsetTableProps) {
   const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set());
 
   const updateSelection = (newSelection: Set<string>) => {
@@ -156,7 +158,14 @@ export function WebsetTable({ items, criteria, isLoading, onSelectionChange }: W
             return (
               <tr
                 key={item.id}
-                className={`transition-colors ${isSelected ? 'bg-[var(--primary-light)]' : ''}`}
+                onClick={() => onRowClick?.(item)}
+                className={`transition-colors cursor-pointer ${
+                  selectedRowId === item.id
+                    ? 'bg-blue-50 dark:bg-blue-900/20'
+                    : isSelected
+                    ? 'bg-[var(--primary-light)]'
+                    : 'hover:bg-[var(--bg-surface)]'
+                }`}
               >
                 <td className="text-center">
                   <input

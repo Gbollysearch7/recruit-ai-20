@@ -1,19 +1,11 @@
 'use client';
 
+import { useState } from 'react';
 import { AppLayout } from '@/components/AppLayout';
 import Link from 'next/link';
-import {
-  Search,
-  Clock,
-  Users,
-  Trash2,
-  ExternalLink,
-  Plus,
-  Filter
-} from 'lucide-react';
 
 // Mock data for demonstration
-const savedSearches = [
+const initialSearches = [
   {
     id: '1',
     query: 'Full-stack engineers in SF with AI startup experience',
@@ -68,112 +60,143 @@ function formatDate(dateString: string) {
 }
 
 export default function SavedSearchesPage() {
+  const [savedSearches, setSavedSearches] = useState(initialSearches);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(null);
+  const [filterStatus, setFilterStatus] = useState<'all' | 'completed' | 'running'>('all');
+
+  const handleDelete = (id: string) => {
+    setSavedSearches(savedSearches.filter(s => s.id !== id));
+    setShowDeleteConfirm(null);
+  };
+
+  const filteredSearches = filterStatus === 'all'
+    ? savedSearches
+    : savedSearches.filter(s => s.status === filterStatus);
+
   return (
     <AppLayout>
-      <div className="space-y-6">
+      <div className="space-y-4">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div>
-            <h1 className="text-2xl font-semibold text-gray-900 tracking-tight">Saved Searches</h1>
-            <p className="text-gray-600 mt-1">View and manage your previous searches</p>
+            <h1 className="text-xl font-semibold text-[var(--text-primary)] tracking-tight">Saved Searches</h1>
+            <p className="text-sm text-[var(--text-secondary)] mt-0.5">View and manage your previous searches</p>
           </div>
-          <div className="flex items-center gap-3">
-            <button className="inline-flex items-center gap-2 px-4 py-2.5 bg-white text-gray-700 text-sm font-medium rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors">
-              <Filter className="w-4 h-4" />
-              Filter
-            </button>
+          <div className="flex items-center gap-2">
+            <div className="relative">
+              <select
+                value={filterStatus}
+                onChange={(e) => setFilterStatus(e.target.value as 'all' | 'completed' | 'running')}
+                className="btn btn-secondary appearance-none pr-7 text-xs"
+              >
+                <option value="all">All Status</option>
+                <option value="completed">Completed</option>
+                <option value="running">Running</option>
+              </select>
+              <span className="material-icons-outlined text-xs absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-[var(--text-muted)]">filter_list</span>
+            </div>
             <Link
               href="/search"
-              className="inline-flex items-center gap-2 px-4 py-2.5 bg-[#2563eb] text-white text-sm font-medium rounded-lg hover:bg-[#1d4ed8] transition-colors"
+              className="btn btn-primary"
             >
-              <Plus className="w-4 h-4" />
+              <span className="material-icons-outlined text-sm">add</span>
               New Search
             </Link>
           </div>
         </div>
 
         {/* Search List */}
-        <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+        <div className="bg-[var(--bg-elevated)] rounded-lg border border-[var(--border-light)] overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-gray-50 border-b border-gray-200">
+            <table className="dense-table">
+              <thead>
                 <tr>
-                  <th className="text-left text-xs font-medium text-gray-500 uppercase tracking-wider px-6 py-3">
-                    Search Query
-                  </th>
-                  <th className="text-left text-xs font-medium text-gray-500 uppercase tracking-wider px-6 py-3">
-                    Results
-                  </th>
-                  <th className="text-left text-xs font-medium text-gray-500 uppercase tracking-wider px-6 py-3">
-                    Status
-                  </th>
-                  <th className="text-left text-xs font-medium text-gray-500 uppercase tracking-wider px-6 py-3">
-                    Created
-                  </th>
-                  <th className="text-right text-xs font-medium text-gray-500 uppercase tracking-wider px-6 py-3">
-                    Actions
-                  </th>
+                  <th style={{ width: '40%' }}>Search Query</th>
+                  <th style={{ width: '10%' }}>Results</th>
+                  <th style={{ width: '12%' }}>Status</th>
+                  <th style={{ width: '20%' }}>Created</th>
+                  <th style={{ width: '18%', textAlign: 'right' }}>Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100">
-                {savedSearches.map((search) => (
-                  <tr key={search.id} className="hover:bg-gray-50 transition-colors">
-                    <td className="px-6 py-4">
-                      <div className="flex items-start gap-3">
-                        <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center flex-shrink-0">
-                          <Search className="w-4 h-4 text-[#2563eb]" />
+              <tbody>
+                {filteredSearches.map((search) => (
+                  <tr key={search.id}>
+                    <td>
+                      <div className="flex items-center gap-2">
+                        <div className="w-6 h-6 rounded bg-[var(--primary-light)] flex items-center justify-center flex-shrink-0">
+                          <span className="material-icons-outlined text-xs text-[var(--primary)]">search</span>
                         </div>
                         <div className="min-w-0">
-                          <p className="text-sm font-medium text-gray-900 truncate max-w-md">
+                          <p className="font-medium text-[var(--text-primary)] truncate max-w-[300px]">
                             {search.query}
                           </p>
-                          <p className="text-xs text-gray-500 mt-0.5 capitalize">
+                          <p className="text-[10px] text-[var(--text-muted)] capitalize">
                             {search.entityType}
                           </p>
                         </div>
                       </div>
                     </td>
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-1.5">
-                        <Users className="w-4 h-4 text-gray-400" />
-                        <span className="text-sm text-gray-900">{search.results}</span>
+                    <td>
+                      <div className="flex items-center gap-1">
+                        <span className="material-icons-outlined text-xs text-[var(--text-muted)]">group</span>
+                        <span className="text-[var(--text-primary)]">{search.results}</span>
                       </div>
                     </td>
-                    <td className="px-6 py-4">
-                      <span className={`inline-flex items-center px-2.5 py-1 text-xs font-medium rounded-full ${
+                    <td>
+                      <span className={`match-badge ${
                         search.status === 'completed'
-                          ? 'bg-green-50 text-green-700'
-                          : search.status === 'running'
-                          ? 'bg-blue-50 text-blue-700'
-                          : 'bg-gray-50 text-gray-700'
+                          ? 'match-badge-match'
+                          : 'bg-[var(--primary-light)] text-[var(--primary)]'
                       }`}>
                         {search.status === 'running' && (
-                          <span className="w-1.5 h-1.5 bg-blue-500 rounded-full mr-1.5 animate-pulse" />
+                          <span className="inline-block w-1 h-1 rounded-full bg-current mr-1 animate-pulse" />
                         )}
                         {search.status}
                       </span>
                     </td>
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-1.5 text-sm text-gray-500">
-                        <Clock className="w-4 h-4" />
+                    <td>
+                      <div className="flex items-center gap-1 text-[var(--text-muted)]">
+                        <span className="material-icons-outlined text-xs">schedule</span>
                         {formatDate(search.createdAt)}
                       </div>
                     </td>
-                    <td className="px-6 py-4">
-                      <div className="flex items-center justify-end gap-2">
+                    <td>
+                      <div className="flex items-center justify-end gap-1 relative">
                         <Link
                           href={`/searches/${search.id}`}
-                          className="p-2 text-gray-400 hover:text-[#2563eb] hover:bg-blue-50 rounded-lg transition-colors"
+                          className="btn btn-ghost p-1"
                           title="View results"
                         >
-                          <ExternalLink className="w-4 h-4" />
+                          <span className="material-icons-outlined text-sm">open_in_new</span>
                         </Link>
                         <button
-                          className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                          onClick={() => setShowDeleteConfirm(search.id)}
+                          className="btn btn-ghost p-1 hover:text-[var(--error)]"
                           title="Delete search"
                         >
-                          <Trash2 className="w-4 h-4" />
+                          <span className="material-icons-outlined text-sm">delete</span>
                         </button>
+
+                        {/* Delete confirmation popover */}
+                        {showDeleteConfirm === search.id && (
+                          <div className="absolute right-0 top-full mt-1 bg-[var(--bg-elevated)] border border-[var(--border-light)] rounded-md shadow-[var(--shadow-md)] p-3 z-10 w-40">
+                            <p className="text-xs text-[var(--text-secondary)] mb-2">Delete this search?</p>
+                            <div className="flex gap-1.5">
+                              <button
+                                onClick={() => handleDelete(search.id)}
+                                className="flex-1 px-2 py-1 bg-[var(--error)] text-white text-[10px] font-medium rounded hover:bg-red-600"
+                              >
+                                Delete
+                              </button>
+                              <button
+                                onClick={() => setShowDeleteConfirm(null)}
+                                className="flex-1 px-2 py-1 border border-[var(--border-light)] text-[var(--text-secondary)] text-[10px] font-medium rounded hover:bg-[var(--bg-surface)]"
+                              >
+                                Cancel
+                              </button>
+                            </div>
+                          </div>
+                        )}
                       </div>
                     </td>
                   </tr>
@@ -183,16 +206,16 @@ export default function SavedSearchesPage() {
           </div>
 
           {/* Empty State */}
-          {savedSearches.length === 0 && (
-            <div className="py-16 text-center">
-              <Search className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-1">No searches yet</h3>
-              <p className="text-gray-500 mb-6">Start by creating your first candidate search</p>
+          {filteredSearches.length === 0 && (
+            <div className="py-12 text-center">
+              <span className="material-icons-outlined text-4xl text-[var(--text-muted)] mb-3 block">search_off</span>
+              <h3 className="text-sm font-medium text-[var(--text-primary)] mb-1">No searches yet</h3>
+              <p className="text-xs text-[var(--text-muted)] mb-4">Start by creating your first candidate search</p>
               <Link
                 href="/search"
-                className="inline-flex items-center gap-2 px-4 py-2.5 bg-[#2563eb] text-white text-sm font-medium rounded-lg hover:bg-[#1d4ed8] transition-colors"
+                className="btn btn-primary"
               >
-                <Plus className="w-4 h-4" />
+                <span className="material-icons-outlined text-sm">add</span>
                 New Search
               </Link>
             </div>
@@ -201,19 +224,19 @@ export default function SavedSearchesPage() {
 
         {/* Pagination */}
         <div className="flex items-center justify-between">
-          <p className="text-sm text-gray-500">
-            Showing {savedSearches.length} of {savedSearches.length} searches
+          <p className="text-xs text-[var(--text-muted)]">
+            Showing {filteredSearches.length} of {savedSearches.length} searches
           </p>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1">
             <button
               disabled
-              className="px-3 py-1.5 text-sm text-gray-400 bg-gray-100 rounded-lg cursor-not-allowed"
+              className="btn btn-secondary opacity-50 cursor-not-allowed"
             >
               Previous
             </button>
             <button
               disabled
-              className="px-3 py-1.5 text-sm text-gray-400 bg-gray-100 rounded-lg cursor-not-allowed"
+              className="btn btn-secondary opacity-50 cursor-not-allowed"
             >
               Next
             </button>

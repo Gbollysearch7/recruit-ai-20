@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 
 interface SavedSearch {
   id: string;
@@ -36,14 +36,26 @@ const monthSearches: SavedSearch[] = [
 
 export function WebsetsSidebar({ onNewSearch }: WebsetsSidebarProps) {
   const pathname = usePathname();
+  const router = useRouter();
   const [expandedSections, setExpandedSections] = useState({
     today: true,
     week: true,
     month: true,
   });
+  const [showNewFolderInput, setShowNewFolderInput] = useState(false);
+  const [newFolderName, setNewFolderName] = useState('');
+  const [folders, setFolders] = useState<string[]>([]);
 
   const toggleSection = (section: 'today' | 'week' | 'month') => {
     setExpandedSections(prev => ({ ...prev, [section]: !prev[section] }));
+  };
+
+  const handleCreateFolder = () => {
+    if (newFolderName.trim()) {
+      setFolders([...folders, newFolderName.trim()]);
+      setNewFolderName('');
+      setShowNewFolderInput(false);
+    }
   };
 
   const SearchItem = ({ search, isActive = false }: { search: SavedSearch; isActive?: boolean }) => (
@@ -73,21 +85,73 @@ export function WebsetsSidebar({ onNewSearch }: WebsetsSidebarProps) {
           <span className="material-icons-outlined text-sm">add</span>
           New search
         </button>
-        <button className="w-full flex items-center gap-2 px-2 py-1.5 text-xs text-[var(--text-secondary)] hover:bg-white dark:hover:bg-slate-800 rounded transition-colors">
+        <button
+          onClick={() => router.push('/searches')}
+          className="w-full flex items-center gap-2 px-2 py-1.5 text-xs text-[var(--text-secondary)] hover:bg-white dark:hover:bg-slate-800 rounded transition-colors"
+        >
           <span className="material-icons-outlined text-sm">history</span>
           Past searches
         </button>
-        <button className="w-full flex items-center justify-between px-2 py-1.5 text-xs text-[var(--text-secondary)] hover:bg-white dark:hover:bg-slate-800 rounded transition-colors">
+        <button
+          onClick={() => router.push('/dashboard')}
+          className="w-full flex items-center justify-between px-2 py-1.5 text-xs text-[var(--text-secondary)] hover:bg-white dark:hover:bg-slate-800 rounded transition-colors"
+        >
           <div className="flex items-center gap-2">
             <span className="material-icons-outlined text-sm">monitor</span>
             Monitors
           </div>
           <span className="bg-blue-100 text-blue-600 px-1 rounded-sm text-[9px] font-bold">NEW</span>
         </button>
-        <button className="w-full flex items-center gap-2 px-2 py-1.5 text-xs text-[var(--text-secondary)] hover:bg-white dark:hover:bg-slate-800 rounded transition-colors">
+        <button
+          onClick={() => setShowNewFolderInput(true)}
+          className="w-full flex items-center gap-2 px-2 py-1.5 text-xs text-[var(--text-secondary)] hover:bg-white dark:hover:bg-slate-800 rounded transition-colors"
+        >
           <span className="material-icons-outlined text-sm">create_new_folder</span>
           New folder
         </button>
+
+        {/* New folder input */}
+        {showNewFolderInput && (
+          <div className="px-2 py-1 space-y-1">
+            <input
+              type="text"
+              value={newFolderName}
+              onChange={(e) => setNewFolderName(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') handleCreateFolder();
+                if (e.key === 'Escape') setShowNewFolderInput(false);
+              }}
+              placeholder="Folder name"
+              className="w-full px-2 py-1 text-xs border border-[var(--border-light)] rounded bg-white dark:bg-slate-800"
+              autoFocus
+            />
+            <div className="flex gap-1">
+              <button
+                onClick={handleCreateFolder}
+                className="flex-1 px-2 py-1 text-[10px] bg-[var(--primary)] text-white rounded"
+              >
+                Create
+              </button>
+              <button
+                onClick={() => setShowNewFolderInput(false)}
+                className="flex-1 px-2 py-1 text-[10px] border border-[var(--border-light)] rounded"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Created folders */}
+        {folders.map((folder, index) => (
+          <button
+            key={index}
+            className="w-full flex items-center gap-2 px-2 py-1.5 text-xs text-[var(--text-secondary)] hover:bg-white dark:hover:bg-slate-800 rounded transition-colors"
+          >
+            <span className="material-icons-outlined text-sm">folder</span>
+            {folder}
+          </button>
+        ))}
       </div>
 
       {/* Saved Searches List */}

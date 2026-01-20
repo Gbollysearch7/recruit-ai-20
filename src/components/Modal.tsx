@@ -57,7 +57,7 @@ export function Modal({ isOpen, onClose, title, children, size = 'md' }: ModalPr
             onClick={onClose}
             className="p-1 text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-surface)] rounded transition-colors"
           >
-            <span className="material-icons-outlined text-lg">close</span>
+            <span className="material-icons-outlined text-base">close</span>
           </button>
         </div>
 
@@ -88,9 +88,9 @@ export function CodeModal({ isOpen, onClose, code, language = 'javascript' }: Co
           <span className="text-xs text-[var(--text-muted)] uppercase">{language}</span>
           <button
             onClick={copyToClipboard}
-            className="btn btn-ghost text-xs"
+            className="btn btn-ghost"
           >
-            <span className="material-icons-outlined text-sm">content_copy</span>
+            <span className="material-icons-outlined text-xs">content_copy</span>
             Copy
           </button>
         </div>
@@ -283,7 +283,7 @@ export function AddEnrichmentModal({
                   <p className="text-xs text-[var(--text-muted)]">{enrichment.description}</p>
                 </div>
                 {isSelected && (
-                  <span className="material-icons-outlined text-[var(--primary)]">check_circle</span>
+                  <span className="material-icons-outlined text-base text-[var(--primary)]">check_circle</span>
                 )}
               </div>
             </button>

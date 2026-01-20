@@ -2,19 +2,6 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import {
-  Users,
-  Search,
-  LayoutDashboard,
-  History,
-  Settings,
-  LogOut,
-  Menu,
-  X,
-  Sparkles,
-  Bell,
-  HelpCircle,
-} from 'lucide-react';
 import { useState } from 'react';
 
 interface AppLayoutProps {
@@ -22,9 +9,9 @@ interface AppLayoutProps {
 }
 
 const navigation = [
-  { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
-  { name: 'Search', href: '/search', icon: Search },
-  { name: 'Saved Searches', href: '/searches', icon: History },
+  { name: 'Dashboard', href: '/dashboard', icon: 'dashboard' },
+  { name: 'Search', href: '/search', icon: 'search' },
+  { name: 'Saved Searches', href: '/searches', icon: 'history' },
 ];
 
 export function AppLayout({ children }: AppLayoutProps) {
@@ -43,41 +30,39 @@ export function AppLayout({ children }: AppLayoutProps) {
 
       {/* Sidebar */}
       <aside
-        className={`fixed top-0 left-0 z-50 h-full w-[260px] bg-[var(--bg-elevated)] border-r border-[var(--border-light)] transform transition-transform duration-200 ease-out lg:translate-x-0 ${
+        className={`fixed top-0 left-0 z-50 h-full w-[220px] bg-[var(--bg-elevated)] border-r border-[var(--border-light)] transform transition-transform duration-200 ease-out lg:translate-x-0 ${
           sidebarOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
         <div className="flex flex-col h-full">
           {/* Logo */}
-          <div className="flex items-center justify-between h-16 px-5 border-b border-[var(--border-light)]">
-            <Link href="/" className="flex items-center gap-2.5">
-              <div className="w-8 h-8 bg-[var(--accent)] rounded-lg flex items-center justify-center shadow-sm">
-                <Users className="w-4 h-4 text-white" />
-              </div>
-              <span className="text-base font-semibold text-[var(--text-primary)] tracking-tight">Recruit.ai</span>
+          <div className="flex items-center justify-between h-12 px-4 border-b border-[var(--border-light)]">
+            <Link href="/" className="flex items-center gap-2">
+              <span className="material-icons-outlined text-[var(--primary)] text-lg">filter_center_focus</span>
+              <span className="text-sm font-semibold text-[var(--text-primary)] tracking-tight">Recruit.ai</span>
             </Link>
             <button
-              className="lg:hidden p-1.5 rounded-md text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)] transition-colors"
+              className="lg:hidden p-1 rounded text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-surface)] transition-colors"
               onClick={() => setSidebarOpen(false)}
             >
-              <X className="w-5 h-5" />
+              <span className="material-icons-outlined text-lg">close</span>
             </button>
           </div>
 
           {/* Quick Action */}
-          <div className="px-4 py-4">
+          <div className="px-3 py-3">
             <Link
               href="/search"
-              className="flex items-center justify-center gap-2 w-full px-4 py-2.5 bg-[var(--accent)] text-white text-sm font-medium rounded-lg hover:bg-[var(--accent-hover)] transition-all shadow-sm hover:shadow-md"
+              className="btn btn-primary w-full justify-center"
             >
-              <Sparkles className="w-4 h-4" />
+              <span className="material-icons-outlined text-sm">auto_awesome</span>
               New Search
             </Link>
           </div>
 
           {/* Navigation */}
-          <nav className="flex-1 px-3 py-2 space-y-1 overflow-y-auto">
-            <p className="px-3 py-2 text-[10px] font-semibold uppercase tracking-wider text-[var(--text-muted)]">
+          <nav className="flex-1 px-2 py-1 space-y-0.5 overflow-y-auto sidebar-scroll">
+            <p className="px-2 py-1.5 text-[9px] font-semibold uppercase tracking-wider text-[var(--text-muted)]">
               Menu
             </p>
             {navigation.map((item) => {
@@ -86,14 +71,14 @@ export function AppLayout({ children }: AppLayoutProps) {
                 <Link
                   key={item.name}
                   href={item.href}
-                  className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${
+                  className={`flex items-center gap-2 px-2 py-1.5 rounded text-xs font-medium transition-all ${
                     isActive
-                      ? 'bg-[var(--accent-light)] text-[var(--accent)]'
-                      : 'text-[var(--text-secondary)] hover:bg-[var(--bg-tertiary)] hover:text-[var(--text-primary)]'
+                      ? 'bg-[var(--primary-light)] text-[var(--primary)]'
+                      : 'text-[var(--text-secondary)] hover:bg-[var(--bg-surface)] hover:text-[var(--text-primary)]'
                   }`}
                   onClick={() => setSidebarOpen(false)}
                 >
-                  <item.icon className={`w-[18px] h-[18px] ${isActive ? 'text-[var(--accent)]' : 'text-[var(--text-muted)]'}`} />
+                  <span className={`material-icons-outlined text-base ${isActive ? 'text-[var(--primary)]' : 'text-[var(--text-muted)]'}`}>{item.icon}</span>
                   {item.name}
                 </Link>
               );
@@ -101,35 +86,35 @@ export function AppLayout({ children }: AppLayoutProps) {
           </nav>
 
           {/* Bottom section */}
-          <div className="px-3 py-4 border-t border-[var(--border-light)] space-y-1">
+          <div className="px-2 py-2 border-t border-[var(--border-light)] space-y-0.5">
             <Link
               href="/settings"
-              className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-[var(--text-secondary)] hover:bg-[var(--bg-tertiary)] hover:text-[var(--text-primary)] transition-all"
+              className="flex items-center gap-2 px-2 py-1.5 rounded text-xs font-medium text-[var(--text-secondary)] hover:bg-[var(--bg-surface)] hover:text-[var(--text-primary)] transition-all"
             >
-              <Settings className="w-[18px] h-[18px] text-[var(--text-muted)]" />
+              <span className="material-icons-outlined text-base text-[var(--text-muted)]">settings</span>
               Settings
             </Link>
             <Link
               href="/help"
-              className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-[var(--text-secondary)] hover:bg-[var(--bg-tertiary)] hover:text-[var(--text-primary)] transition-all"
+              className="flex items-center gap-2 px-2 py-1.5 rounded text-xs font-medium text-[var(--text-secondary)] hover:bg-[var(--bg-surface)] hover:text-[var(--text-primary)] transition-all"
             >
-              <HelpCircle className="w-[18px] h-[18px] text-[var(--text-muted)]" />
+              <span className="material-icons-outlined text-base text-[var(--text-muted)]">help_outline</span>
               Help & Support
             </Link>
           </div>
 
           {/* User section */}
-          <div className="px-3 py-3 border-t border-[var(--border-light)]">
-            <div className="flex items-center gap-3 px-3 py-2">
-              <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[var(--accent)] to-[var(--accent-hover)] flex items-center justify-center text-white text-sm font-medium shadow-sm">
+          <div className="px-2 py-2 border-t border-[var(--border-light)]">
+            <div className="flex items-center gap-2 px-2 py-1.5">
+              <div className="w-7 h-7 rounded bg-[var(--primary)] flex items-center justify-center text-white text-[10px] font-medium">
                 JD
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-[var(--text-primary)] truncate">John Doe</p>
-                <p className="text-xs text-[var(--text-tertiary)] truncate">john@company.com</p>
+                <p className="text-xs font-medium text-[var(--text-primary)] truncate">John Doe</p>
+                <p className="text-[10px] text-[var(--text-tertiary)] truncate">john@company.com</p>
               </div>
-              <button className="p-1.5 rounded-md text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)] transition-colors">
-                <LogOut className="w-4 h-4" />
+              <button className="p-1 rounded text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-surface)] transition-colors">
+                <span className="material-icons-outlined text-base">logout</span>
               </button>
             </div>
           </div>
@@ -137,29 +122,27 @@ export function AppLayout({ children }: AppLayoutProps) {
       </aside>
 
       {/* Main content */}
-      <div className="lg:pl-[260px]">
+      <div className="lg:pl-[220px]">
         {/* Top bar */}
-        <header className="sticky top-0 z-30 h-16 bg-[var(--bg-elevated)]/80 backdrop-blur-md border-b border-[var(--border-light)]">
-          <div className="flex items-center justify-between h-full px-4 lg:px-6">
-            <div className="flex items-center gap-3">
+        <header className="sticky top-0 z-30 h-12 bg-[var(--bg-elevated)]/95 backdrop-blur-sm border-b border-[var(--border-light)]">
+          <div className="flex items-center justify-between h-full px-4">
+            <div className="flex items-center gap-2">
               <button
-                className="lg:hidden p-2 -ml-2 rounded-md text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)] transition-colors"
+                className="lg:hidden p-1.5 -ml-1.5 rounded text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-surface)] transition-colors"
                 onClick={() => setSidebarOpen(true)}
               >
-                <Menu className="w-5 h-5" />
+                <span className="material-icons-outlined text-xl">menu</span>
               </button>
-
-              {/* Breadcrumb or page title could go here */}
             </div>
 
-            <div className="flex items-center gap-2">
-              <button className="relative p-2 rounded-lg text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)] transition-colors">
-                <Bell className="w-5 h-5" />
-                <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-[var(--error)] rounded-full" />
+            <div className="flex items-center gap-1.5">
+              <button className="relative p-1.5 rounded text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-surface)] transition-colors">
+                <span className="material-icons-outlined text-lg">notifications</span>
+                <span className="absolute top-1 right-1 w-1.5 h-1.5 bg-[var(--error)] rounded-full" />
               </button>
-              <div className="hidden sm:block w-px h-6 bg-[var(--border-light)] mx-1" />
-              <button className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm text-[var(--text-secondary)] hover:bg-[var(--bg-tertiary)] transition-colors">
-                <div className="w-7 h-7 rounded-full bg-gradient-to-br from-[var(--accent)] to-[var(--accent-hover)] flex items-center justify-center text-white text-xs font-medium">
+              <div className="hidden sm:block w-px h-5 bg-[var(--border-light)] mx-1" />
+              <button className="hidden sm:flex items-center gap-1.5 px-2 py-1 rounded text-xs text-[var(--text-secondary)] hover:bg-[var(--bg-surface)] transition-colors">
+                <div className="w-6 h-6 rounded bg-[var(--primary)] flex items-center justify-center text-white text-[10px] font-medium">
                   JD
                 </div>
                 <span className="font-medium">John</span>
@@ -169,8 +152,8 @@ export function AppLayout({ children }: AppLayoutProps) {
         </header>
 
         {/* Page content */}
-        <main className="p-4 lg:p-6">
-          <div className="max-w-7xl mx-auto">
+        <main className="p-4">
+          <div className="max-w-6xl mx-auto">
             {children}
           </div>
         </main>
