@@ -11,7 +11,9 @@ interface SearchesToolbarProps {
   onMonitor?: () => void;
   onAddEnrichment?: () => void;
   onDelete?: () => void;
+  onDeleteSearch?: () => void;
   onExport?: () => void;
+  isExporting?: boolean;
 }
 
 export function SearchesToolbar({
@@ -23,7 +25,9 @@ export function SearchesToolbar({
   onMonitor,
   onAddEnrichment,
   onDelete,
+  onDeleteSearch,
   onExport,
+  isExporting = false,
 }: SearchesToolbarProps) {
   return (
     <div className="h-10 border-b border-[var(--border-light)] flex items-center justify-between px-4 shrink-0 bg-[var(--bg-primary)]">
@@ -48,6 +52,20 @@ export function SearchesToolbar({
         >
           Get Code &lt;&gt;
         </button>
+        <button
+          onClick={onExport}
+          disabled={isExporting}
+          className={`flex items-center gap-1 transition-colors ${
+            isExporting
+              ? 'text-[var(--text-muted)] cursor-not-allowed'
+              : 'text-[var(--text-secondary)] hover:text-[var(--primary)]'
+          }`}
+        >
+          <span className={`material-icons-outlined text-sm ${isExporting ? 'animate-spin' : ''}`}>
+            {isExporting ? 'hourglass_empty' : 'download'}
+          </span>
+          {isExporting ? 'Exporting...' : 'Export'}
+        </button>
 
         {selectedCount > 0 && (
           <>
@@ -62,6 +80,16 @@ export function SearchesToolbar({
             </button>
           </>
         )}
+
+        <div className="w-px h-4 bg-[var(--border-light)]" />
+        <button
+          onClick={onDeleteSearch}
+          className="flex items-center gap-1 text-[var(--text-muted)] hover:text-[var(--error)] transition-colors"
+          title="Delete entire search"
+        >
+          <span className="material-icons-outlined text-sm">delete_forever</span>
+          Delete Search
+        </button>
       </div>
 
       <div className="flex items-center gap-2">

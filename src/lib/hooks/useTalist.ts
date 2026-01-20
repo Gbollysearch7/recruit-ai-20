@@ -185,6 +185,11 @@ export function useTalist(options: UseTalistOptions = {}): UseTalistReturn {
       setWebset(data);
       websetIdRef.current = data.id;
 
+      // Dispatch event to notify sidebar of new search
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('talist:search-created', { detail: { websetId: data.id } }));
+      }
+
       // Start polling
       pollingRef.current = setTimeout(() => pollWebset(data.id), pollingInterval);
     } catch (err) {

@@ -15,6 +15,8 @@ import {
   AddEnrichmentModal,
 } from '@/components/Modal';
 import { WebsetItem, Webset, getPersonFromItem } from '@/types/exa';
+import { useToast } from '@/components/Toast';
+import { ThemeToggle } from '@/components/ThemeToggle';
 
 // Mock data for demonstration - using correct nested structure
 const mockItems: WebsetItem[] = [
@@ -399,12 +401,15 @@ const sortOptions = [
 export default function SearchDetailPage() {
   const params = useParams();
   const router = useRouter();
+  const { addToast } = useToast();
   const [items, setItems] = useState<WebsetItem[]>(mockItems);
   const [filteredItems, setFilteredItems] = useState<WebsetItem[]>(mockItems);
   const [criteria, setCriteria] = useState<string[]>(defaultCriteria);
   const [enrichments, setEnrichments] = useState<string[]>(['email', 'skills']);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [isLoading, setIsLoading] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
   const [searchQuery, setSearchQuery] = useState('People: sales managers in Taiwan, enterprise solutions, under...');
   const [selectedItem, setSelectedItem] = useState<WebsetItem | null>(null);
 
@@ -413,6 +418,7 @@ export default function SearchDetailPage() {
   const [showSortModal, setShowSortModal] = useState(false);
   const [showCodeModal, setShowCodeModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showDeleteSearchModal, setShowDeleteSearchModal] = useState(false);
   const [showEnrichmentModal, setShowEnrichmentModal] = useState(false);
   const [showMonitorModal, setShowMonitorModal] = useState(false);
 
@@ -499,37 +505,86 @@ const pollResults = async (websetId) => {
     setItems(newItems);
     setFilteredItems(newItems);
     setSelectedIds(new Set());
+    addToast(`${selectedIds.size} item(s) removed`, 'success');
+  };
+
+  // Handle delete entire search
+  const handleDeleteSearch = async () => {
+    const searchId = params.id as string;
+
+    // Don't delete mock searches
+    if (parseInt(searchId) <= 20) {
+      addToast('Cannot delete demo search', 'warning');
+      setShowDeleteSearchModal(false);
+      return;
+    }
+
+    setIsDeleting(true);
+    try {
+      const res = await fetch(`/api/websets/${searchId}`, {
+        method: 'DELETE',
+      });
+
+      if (res.ok) {
+        addToast('Search deleted successfully', 'success');
+        router.push('/dashboard');
+      } else {
+        const data = await res.json();
+        throw new Error(data.error || 'Failed to delete search');
+      }
+    } catch (error) {
+      console.error('Error deleting search:', error);
+      addToast(error instanceof Error ? error.message : 'Failed to delete search', 'error');
+    } finally {
+      setIsDeleting(false);
+      setShowDeleteSearchModal(false);
+    }
   };
 
   // Handle export
-  const handleExport = () => {
-    const dataToExport = selectedIds.size > 0
-      ? items.filter(item => selectedIds.has(item.id))
-      : items;
+  const handleExport = async () => {
+    setIsExporting(true);
+    addToast('Preparing export...', 'info');
 
-    const csvContent = [
-      ['Name', 'Company', 'Position', 'URL'].join(','),
-      ...dataToExport.map(item => {
-        const person = getPersonFromItem(item);
-        if (person) {
-          return [
-            `"${person.name || ''}"`,
-            `"${person.company?.name || ''}"`,
-            `"${person.position || ''}"`,
-            `"${item.properties.url || ''}"`,
-          ].join(',');
-        }
-        return '';
-      }),
-    ].join('\n');
+    try {
+      // Small delay to show loading state
+      await new Promise(resolve => setTimeout(resolve, 300));
 
-    const blob = new Blob([csvContent], { type: 'text/csv' });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `talist-export-${params.id}.csv`;
-    a.click();
-    window.URL.revokeObjectURL(url);
+      const dataToExport = selectedIds.size > 0
+        ? items.filter(item => selectedIds.has(item.id))
+        : items;
+
+      const csvContent = [
+        ['Name', 'Company', 'Position', 'URL'].join(','),
+        ...dataToExport.map(item => {
+          const person = getPersonFromItem(item);
+          if (person) {
+            return [
+              `"${person.name || ''}"`,
+              `"${person.company?.name || ''}"`,
+              `"${person.position || ''}"`,
+              `"${item.properties.url || ''}"`,
+            ].join(',');
+          }
+          return '';
+        }),
+      ].join('\n');
+
+      const blob = new Blob([csvContent], { type: 'text/csv' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `talist-export-${params.id}.csv`;
+      a.click();
+      window.URL.revokeObjectURL(url);
+
+      addToast(`Exported ${dataToExport.length} candidate(s) to CSV`, 'success');
+    } catch (error) {
+      console.error('Export error:', error);
+      addToast('Failed to export data', 'error');
+    } finally {
+      setIsExporting(false);
+    }
   };
 
   // Handle sort
@@ -571,13 +626,14 @@ const pollResults = async (websetId) => {
   // Copy search to clipboard
   const handleCopySearch = () => {
     navigator.clipboard.writeText(searchQuery);
+    addToast('Search query copied to clipboard', 'success');
   };
 
   // Share search
   const handleShare = () => {
     const url = window.location.href;
     navigator.clipboard.writeText(url);
-    alert('Search URL copied to clipboard!');
+    addToast('Search URL copied to clipboard', 'success');
   };
 
   return (
@@ -630,6 +686,7 @@ const pollResults = async (websetId) => {
 
         {/* Right side */}
         <div className="flex items-center gap-4 text-xs font-medium">
+          <ThemeToggle />
           <button
             onClick={() => window.open('mailto:feedback@talist.ai', '_blank')}
             className="flex items-center gap-1 hover:text-[var(--primary)] transition-colors text-[var(--text-secondary)]"
@@ -664,7 +721,9 @@ const pollResults = async (websetId) => {
             onMonitor={() => setShowMonitorModal(true)}
             onAddEnrichment={() => setShowEnrichmentModal(true)}
             onDelete={() => setShowDeleteModal(true)}
+            onDeleteSearch={() => setShowDeleteSearchModal(true)}
             onExport={handleExport}
+            isExporting={isExporting}
           />
 
           {/* Table */}
@@ -777,7 +836,7 @@ const pollResults = async (websetId) => {
             </button>
             <button
               onClick={() => {
-                alert('Monitor created! You will receive notifications.');
+                addToast('Monitor created! You will receive notifications.', 'success');
                 setShowMonitorModal(false);
               }}
               className="btn btn-primary"
@@ -787,6 +846,16 @@ const pollResults = async (websetId) => {
           </div>
         </div>
       </Modal>
+
+      <ConfirmModal
+        isOpen={showDeleteSearchModal}
+        onClose={() => setShowDeleteSearchModal(false)}
+        onConfirm={handleDeleteSearch}
+        title="Delete Search"
+        message="Are you sure you want to delete this entire search? This will remove all results and cannot be undone."
+        confirmText={isDeleting ? 'Deleting...' : 'Delete Search'}
+        variant="danger"
+      />
     </div>
   );
 }
