@@ -52,7 +52,7 @@ class ExaClient {
       search: {
         query: string;
         count: number;
-        criteria?: string[];
+        criteria?: { description: string }[];
       };
       enrichments?: CreateEnrichmentParameters[];
     } = {
@@ -62,9 +62,9 @@ class ExaClient {
       },
     };
 
-    // Only add criteria if provided
+    // Only add criteria if provided - convert strings to objects with description
     if (params.criteria && params.criteria.length > 0) {
-      body.search.criteria = params.criteria;
+      body.search.criteria = params.criteria.map(c => ({ description: c }));
     }
 
     // Only add enrichments if provided

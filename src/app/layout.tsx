@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Recruit.ai - Find the Perfect Candidates",
-  description: "AI-powered candidate search using Exa Websets. Find exactly who you're looking for.",
+  title: "talist.ai - Find the Perfect Candidates",
+  description: "AI-powered candidate search. Find exactly who you're looking for.",
 };
 
 export default function RootLayout({

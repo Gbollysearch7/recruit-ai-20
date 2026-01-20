@@ -20,13 +20,42 @@ const defaultEnrichments: CreateEnrichmentParameters[] = [
   { description: 'Work Email', format: 'text' },
 ];
 
+// Parse number from query like "5 digital marketers" -> 5
+function parseCountFromQuery(query: string): number | null {
+  // Match patterns like "5 engineers", "10 marketers", "find 20 developers"
+  const match = query.match(/\b(\d+)\s+(?:people|persons|candidates|engineers|developers|marketers|designers|managers|analysts|scientists|specialists|professionals|experts|consultants|recruiters|salespeople|writers|editors|accountants|lawyers|doctors|nurses|teachers|coaches|trainers|administrators|executives|directors|officers|leads|seniors|juniors|interns)/i);
+  if (match) {
+    const num = parseInt(match[1], 10);
+    // Limit to reasonable range
+    if (num >= 1 && num <= 100) {
+      return num;
+    }
+  }
+  return null;
+}
+
 export function SearchForm({ onSearch, isLoading }: SearchFormProps) {
   const [query, setQuery] = useState('');
   const [count, setCount] = useState(20);
+  const [countAutoSet, setCountAutoSet] = useState(false);
   const [criteria, setCriteria] = useState<string[]>([]);
   const [newCriterion, setNewCriterion] = useState('');
   const [enrichments, setEnrichments] = useState<CreateEnrichmentParameters[]>(defaultEnrichments);
   const [showAdvanced, setShowAdvanced] = useState(false);
+
+  // Auto-detect count from query
+  const handleQueryChange = (newQuery: string) => {
+    setQuery(newQuery);
+    const parsedCount = parseCountFromQuery(newQuery);
+    if (parsedCount !== null) {
+      setCount(parsedCount);
+      setCountAutoSet(true);
+    } else if (countAutoSet) {
+      // Reset to default if no number found and was previously auto-set
+      setCount(20);
+      setCountAutoSet(false);
+    }
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -84,9 +113,9 @@ export function SearchForm({ onSearch, isLoading }: SearchFormProps) {
           <input
             type="text"
             value={query}
-            onChange={(e) => setQuery(e.target.value)}
+            onChange={(e) => handleQueryChange(e.target.value)}
             placeholder="e.g., 5 Digital Marketers in San Francisco with startup experience..."
-            className="w-full rounded-xl border border-[var(--border-default)] bg-[var(--bg-primary)] py-4 pl-12 pr-4 text-base text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:border-[var(--border-focus)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/10 transition-all"
+            className="w-full rounded-xl border border-[var(--border-default)] bg-[var(--bg-primary)] py-4 pl-12 pr-4 text-base text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:border-[var(--border-focus)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/10 transition-all"
           />
         </div>
 
@@ -96,22 +125,34 @@ export function SearchForm({ onSearch, isLoading }: SearchFormProps) {
             <label className="text-sm font-medium text-[var(--text-secondary)]">
               Results:
             </label>
-            <select
-              value={count}
-              onChange={(e) => setCount(parseInt(e.target.value))}
-              className="rounded-lg border border-[var(--border-default)] bg-[var(--bg-primary)] px-3 py-2 text-sm text-[var(--text-primary)] focus:border-[var(--border-focus)] focus:outline-none focus:ring-1 focus:ring-[var(--accent)]/20 transition-colors"
-            >
-              <option value={10}>10</option>
-              <option value={20}>20</option>
-              <option value={50}>50</option>
-              <option value={100}>100</option>
-            </select>
+            <div className="relative">
+              <input
+                type="number"
+                min={1}
+                max={100}
+                value={count}
+                onChange={(e) => {
+                  setCount(Math.min(100, Math.max(1, parseInt(e.target.value) || 1)));
+                  setCountAutoSet(false);
+                }}
+                className={`w-20 rounded-lg border bg-[var(--bg-primary)] px-3 py-2 text-sm text-[var(--text-primary)] focus:border-[var(--border-focus)] focus:outline-none focus:ring-1 focus:ring-[var(--primary)]/20 transition-colors ${
+                  countAutoSet
+                    ? 'border-[var(--primary)] ring-1 ring-[var(--primary)]/20'
+                    : 'border-[var(--border-default)]'
+                }`}
+              />
+              {countAutoSet && (
+                <span className="absolute -top-2 -right-2 px-1.5 py-0.5 bg-[var(--primary)] text-white text-[9px] font-medium rounded-full">
+                  auto
+                </span>
+              )}
+            </div>
           </div>
 
           <button
             type="button"
             onClick={() => setShowAdvanced(!showAdvanced)}
-            className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-[var(--text-secondary)] hover:text-[var(--text-primary)] rounded-lg hover:bg-[var(--bg-tertiary)] transition-colors"
+            className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-[var(--text-secondary)] hover:text-[var(--text-primary)] rounded-lg hover:bg-[var(--bg-surface)] transition-colors"
           >
             <Settings2 className="h-4 w-4" />
             Advanced
@@ -143,7 +184,7 @@ export function SearchForm({ onSearch, isLoading }: SearchFormProps) {
                       <button
                         type="button"
                         onClick={() => removeCriterion(index)}
-                        className="p-2 text-[var(--text-muted)] hover:text-[var(--error)] rounded-md hover:bg-[var(--error-light)] transition-colors"
+                        className="p-2 text-[var(--text-muted)] hover:text-[var(--error)] rounded-md hover:bg-[var(--error-bg)] transition-colors"
                       >
                         <X className="h-4 w-4" />
                       </button>
@@ -165,7 +206,7 @@ export function SearchForm({ onSearch, isLoading }: SearchFormProps) {
                   type="button"
                   onClick={addCriterion}
                   disabled={!newCriterion.trim()}
-                  className="px-3 py-2.5 bg-[var(--bg-tertiary)] text-[var(--text-secondary)] rounded-lg hover:bg-[var(--border-default)] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  className="px-3 py-2.5 bg-[var(--bg-surface)] text-[var(--text-secondary)] rounded-lg hover:bg-[var(--border-default)] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 >
                   <Plus className="h-4 w-4" />
                 </button>
@@ -192,7 +233,7 @@ export function SearchForm({ onSearch, isLoading }: SearchFormProps) {
                       onClick={() => toggleEnrichment(enrichment)}
                       className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${
                         isSelected
-                          ? 'bg-[var(--accent-light)] text-[var(--accent)] border border-[var(--accent)]/20'
+                          ? 'bg-[var(--primary-light)] text-[var(--primary)] border border-[var(--primary)]/20'
                           : 'bg-[var(--bg-primary)] text-[var(--text-secondary)] border border-[var(--border-default)] hover:border-[var(--border-focus)]'
                       }`}
                     >
@@ -209,7 +250,7 @@ export function SearchForm({ onSearch, isLoading }: SearchFormProps) {
         <button
           type="submit"
           disabled={isLoading || !query.trim()}
-          className="flex w-full items-center justify-center gap-2.5 rounded-xl bg-[var(--accent)] py-4 text-base font-semibold text-white transition-all hover:bg-[var(--accent-hover)] disabled:cursor-not-allowed disabled:bg-[var(--border-default)] disabled:text-[var(--text-muted)] shadow-sm hover:shadow-md"
+          className="flex w-full items-center justify-center gap-2.5 rounded-xl bg-[var(--primary)] py-4 text-base font-semibold text-white transition-all hover:bg-[var(--primary-hover)] disabled:cursor-not-allowed disabled:bg-[var(--border-default)] disabled:text-[var(--text-muted)] shadow-sm hover:shadow-md"
         >
           {isLoading ? (
             <>
@@ -233,8 +274,8 @@ export function SearchForm({ onSearch, isLoading }: SearchFormProps) {
             <button
               key={index}
               type="button"
-              onClick={() => setQuery(example)}
-              className="rounded-lg border border-[var(--border-light)] bg-[var(--bg-primary)] px-3 py-2 text-sm text-[var(--text-secondary)] transition-all hover:border-[var(--border-default)] hover:bg-[var(--bg-tertiary)] hover:text-[var(--text-primary)]"
+              onClick={() => handleQueryChange(example)}
+              className="rounded-lg border border-[var(--border-light)] bg-[var(--bg-primary)] px-3 py-2 text-sm text-[var(--text-secondary)] transition-all hover:border-[var(--border-default)] hover:bg-[var(--bg-surface)] hover:text-[var(--text-primary)]"
             >
               {example}
             </button>

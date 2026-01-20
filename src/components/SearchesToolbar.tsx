@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 
-interface WebsetsToolbarProps {
+interface SearchesToolbarProps {
   selectedCount: number;
   totalCount: number;
   onFilter?: () => void;
@@ -14,7 +14,7 @@ interface WebsetsToolbarProps {
   onExport?: () => void;
 }
 
-export function WebsetsToolbar({
+export function SearchesToolbar({
   selectedCount,
   totalCount,
   onFilter,
@@ -24,7 +24,7 @@ export function WebsetsToolbar({
   onAddEnrichment,
   onDelete,
   onExport,
-}: WebsetsToolbarProps) {
+}: SearchesToolbarProps) {
   return (
     <div className="h-10 border-b border-[var(--border-light)] flex items-center justify-between px-4 shrink-0 bg-[var(--bg-primary)]">
       <div className="flex items-center gap-4 text-xs">
@@ -85,7 +85,7 @@ export function WebsetsToolbar({
 }
 
 // Footer component for the main area
-export function WebsetsFooter({ matchCount = 0, totalCount = 0 }: { matchCount?: number; totalCount?: number }) {
+export function SearchesFooter({ matchCount = 0, totalCount = 0 }: { matchCount?: number; totalCount?: number }) {
   return (
     <footer className="h-10 border-t border-[var(--border-light)] flex items-center justify-between px-4 text-xs text-[var(--text-muted)] shrink-0 bg-[var(--bg-surface)] bg-opacity-30">
       <div className="flex items-center gap-4">

@@ -2,10 +2,10 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { WebsetsSidebar } from '@/components/WebsetsSidebar';
-import { WebsetTable } from '@/components/WebsetTable';
+import { SearchesSidebar } from '@/components/SearchesSidebar';
+import { ResultsTable } from '@/components/ResultsTable';
 import { CriteriaPanel } from '@/components/CriteriaPanel';
-import { WebsetsToolbar, WebsetsFooter } from '@/components/WebsetsToolbar';
+import { SearchesToolbar, SearchesFooter } from '@/components/SearchesToolbar';
 import {
   Modal,
   CodeModal,
@@ -14,9 +14,9 @@ import {
   SortModal,
   AddEnrichmentModal,
 } from '@/components/Modal';
-import { WebsetItem, Webset } from '@/types/exa';
+import { WebsetItem, Webset, getPersonFromItem } from '@/types/exa';
 
-// Mock data for demonstration - realistic names
+// Mock data for demonstration - using correct nested structure
 const mockItems: WebsetItem[] = [
   {
     id: '1',
@@ -24,13 +24,15 @@ const mockItems: WebsetItem[] = [
     source: 'search',
     sourceId: 'src-1',
     websetId: 'ws-1',
-    url: 'https://linkedin.com/in/tina-peng',
     properties: {
       type: 'person',
-      name: 'Tina Peng',
-      position: 'Senior Account Manager',
-      location: 'Taipei, Taiwan',
-      company: { name: 'SAP', location: 'Taiwan' },
+      url: 'https://linkedin.com/in/tina-peng',
+      person: {
+        name: 'Tina Peng',
+        position: 'Senior Account Manager',
+        location: 'Taipei, Taiwan',
+        company: { name: 'SAP', location: 'Taiwan' },
+      },
     },
   },
   {
@@ -39,13 +41,15 @@ const mockItems: WebsetItem[] = [
     source: 'search',
     sourceId: 'src-2',
     websetId: 'ws-1',
-    url: 'https://linkedin.com/in/hsin-ju-lee',
     properties: {
       type: 'person',
-      name: 'Hsin Ju Lee',
-      position: '業務經理',
-      location: 'Taipei, Taiwan',
-      company: { name: '新人類資訊股份有限公司', location: 'Taiwan' },
+      url: 'https://linkedin.com/in/hsin-ju-lee',
+      person: {
+        name: 'Hsin Ju Lee',
+        position: '業務經理',
+        location: 'Taipei, Taiwan',
+        company: { name: '新人類資訊股份有限公司', location: 'Taiwan' },
+      },
     },
   },
   {
@@ -54,13 +58,15 @@ const mockItems: WebsetItem[] = [
     source: 'search',
     sourceId: 'src-3',
     websetId: 'ws-1',
-    url: 'https://linkedin.com/in/eric-chang',
     properties: {
       type: 'person',
-      name: 'Eric Chang',
-      position: '業務副總經理',
-      location: 'Taipei, Taiwan',
-      company: { name: 'SAS', location: 'Taiwan' },
+      url: 'https://linkedin.com/in/eric-chang',
+      person: {
+        name: 'Eric Chang',
+        position: '業務副總經理',
+        location: 'Taipei, Taiwan',
+        company: { name: 'SAS', location: 'Taiwan' },
+      },
     },
   },
   {
@@ -69,13 +75,15 @@ const mockItems: WebsetItem[] = [
     source: 'search',
     sourceId: 'src-4',
     websetId: 'ws-1',
-    url: 'https://linkedin.com/in/chen-yi-ru',
     properties: {
       type: 'person',
-      name: '陳奕如',
-      position: '業務經理',
-      location: 'Taipei, Taiwan',
-      company: { name: 'NTT DATA', location: 'Taiwan' },
+      url: 'https://linkedin.com/in/chen-yi-ru',
+      person: {
+        name: '陳奕如',
+        position: '業務經理',
+        location: 'Taipei, Taiwan',
+        company: { name: 'NTT DATA', location: 'Taiwan' },
+      },
     },
   },
   {
@@ -84,13 +92,15 @@ const mockItems: WebsetItem[] = [
     source: 'search',
     sourceId: 'src-5',
     websetId: 'ws-1',
-    url: 'https://linkedin.com/in/hao-wen-cheng',
     properties: {
       type: 'person',
-      name: 'Hao wen Cheng',
-      position: 'Sales Manager',
-      location: 'Taipei, Taiwan',
-      company: { name: 'Anyong Fintech Co.', location: 'Taiwan' },
+      url: 'https://linkedin.com/in/hao-wen-cheng',
+      person: {
+        name: 'Hao wen Cheng',
+        position: 'Sales Manager',
+        location: 'Taipei, Taiwan',
+        company: { name: 'Anyong Fintech Co.', location: 'Taiwan' },
+      },
     },
   },
   {
@@ -99,13 +109,15 @@ const mockItems: WebsetItem[] = [
     source: 'search',
     sourceId: 'src-6',
     websetId: 'ws-1',
-    url: 'https://linkedin.com/in/chang-ta-yu',
     properties: {
       type: 'person',
-      name: 'Chang-Ta Yu',
-      position: 'Account Manager',
-      location: 'Taipei, Taiwan',
-      company: { name: 'Oracle', location: 'Taiwan' },
+      url: 'https://linkedin.com/in/chang-ta-yu',
+      person: {
+        name: 'Chang-Ta Yu',
+        position: 'Account Manager',
+        location: 'Taipei, Taiwan',
+        company: { name: 'Oracle', location: 'Taiwan' },
+      },
     },
   },
   {
@@ -114,13 +126,15 @@ const mockItems: WebsetItem[] = [
     source: 'search',
     sourceId: 'src-7',
     websetId: 'ws-1',
-    url: 'https://linkedin.com/in/jemmy-lee',
     properties: {
       type: 'person',
-      name: 'Jemmy Lee',
-      position: 'Country Manager',
-      location: 'Taipei, Taiwan',
-      company: { name: 'ELITE CLOUD PTE.', location: 'Taiwan' },
+      url: 'https://linkedin.com/in/jemmy-lee',
+      person: {
+        name: 'Jemmy Lee',
+        position: 'Country Manager',
+        location: 'Taipei, Taiwan',
+        company: { name: 'ELITE CLOUD PTE.', location: 'Taiwan' },
+      },
     },
   },
   {
@@ -129,13 +143,15 @@ const mockItems: WebsetItem[] = [
     source: 'search',
     sourceId: 'src-8',
     websetId: 'ws-1',
-    url: 'https://linkedin.com/in/gin-lee',
     properties: {
       type: 'person',
-      name: 'GIN LEE',
-      position: 'Account Manager Key Account',
-      location: 'Taipei, Taiwan',
-      company: { name: 'Ricoh Taiwan', location: 'Taiwan' },
+      url: 'https://linkedin.com/in/gin-lee',
+      person: {
+        name: 'GIN LEE',
+        position: 'Account Manager Key Account',
+        location: 'Taipei, Taiwan',
+        company: { name: 'Ricoh Taiwan', location: 'Taiwan' },
+      },
     },
   },
   {
@@ -144,13 +160,15 @@ const mockItems: WebsetItem[] = [
     source: 'search',
     sourceId: 'src-9',
     websetId: 'ws-1',
-    url: 'https://linkedin.com/in/xiu-hao',
     properties: {
       type: 'person',
-      name: '詹修豪',
-      position: 'Taiwan Branch Manager',
-      location: 'Taipei, Taiwan',
-      company: { name: 'Ecount', location: 'Taiwan' },
+      url: 'https://linkedin.com/in/xiu-hao',
+      person: {
+        name: '詹修豪',
+        position: 'Taiwan Branch Manager',
+        location: 'Taipei, Taiwan',
+        company: { name: 'Ecount', location: 'Taiwan' },
+      },
     },
   },
   {
@@ -159,13 +177,15 @@ const mockItems: WebsetItem[] = [
     source: 'search',
     sourceId: 'src-10',
     websetId: 'ws-1',
-    url: 'https://linkedin.com/in/hazel-wang',
     properties: {
       type: 'person',
-      name: 'Hazel Wang',
-      position: 'Overseas Sales Manager',
-      location: 'Taipei, Taiwan',
-      company: { name: 'Streamax Technology', location: 'Taiwan' },
+      url: 'https://linkedin.com/in/hazel-wang',
+      person: {
+        name: 'Hazel Wang',
+        position: 'Overseas Sales Manager',
+        location: 'Taipei, Taiwan',
+        company: { name: 'Streamax Technology', location: 'Taiwan' },
+      },
     },
   },
   {
@@ -174,13 +194,15 @@ const mockItems: WebsetItem[] = [
     source: 'search',
     sourceId: 'src-11',
     websetId: 'ws-1',
-    url: 'https://linkedin.com/in/guo-jun',
     properties: {
       type: 'person',
-      name: '曾國峻',
-      position: '資深業務專員',
-      location: 'Taipei, Taiwan',
-      company: { name: 'iKala', location: 'Taiwan' },
+      url: 'https://linkedin.com/in/guo-jun',
+      person: {
+        name: '曾國峻',
+        position: '資深業務專員',
+        location: 'Taipei, Taiwan',
+        company: { name: 'iKala', location: 'Taiwan' },
+      },
     },
   },
   {
@@ -189,13 +211,15 @@ const mockItems: WebsetItem[] = [
     source: 'search',
     sourceId: 'src-12',
     websetId: 'ws-1',
-    url: 'https://linkedin.com/in/adam-chang',
     properties: {
       type: 'person',
-      name: 'Adam Chang',
-      position: 'Account Manager',
-      location: 'Taipei, Taiwan',
-      company: { name: '甲骨文', location: 'Taiwan' },
+      url: 'https://linkedin.com/in/adam-chang',
+      person: {
+        name: 'Adam Chang',
+        position: 'Account Manager',
+        location: 'Taipei, Taiwan',
+        company: { name: '甲骨文', location: 'Taiwan' },
+      },
     },
   },
   {
@@ -204,13 +228,15 @@ const mockItems: WebsetItem[] = [
     source: 'search',
     sourceId: 'src-13',
     websetId: 'ws-1',
-    url: 'https://linkedin.com/in/darren-wang',
     properties: {
       type: 'person',
-      name: '王博榕 Darren Wang',
-      position: 'Senior Sales Account Manager',
-      location: 'Taipei, Taiwan',
-      company: { name: '中華電信', location: 'Taiwan' },
+      url: 'https://linkedin.com/in/darren-wang',
+      person: {
+        name: '王博榕 Darren Wang',
+        position: 'Senior Sales Account Manager',
+        location: 'Taipei, Taiwan',
+        company: { name: '中華電信', location: 'Taiwan' },
+      },
     },
   },
   {
@@ -219,13 +245,15 @@ const mockItems: WebsetItem[] = [
     source: 'search',
     sourceId: 'src-14',
     websetId: 'ws-1',
-    url: 'https://linkedin.com/in/rose-huang',
     properties: {
       type: 'person',
-      name: 'Rose Huang',
-      position: 'Manager',
-      location: 'Taipei, Taiwan',
-      company: { name: 'Deloitte', location: 'Taiwan' },
+      url: 'https://linkedin.com/in/rose-huang',
+      person: {
+        name: 'Rose Huang',
+        position: 'Manager',
+        location: 'Taipei, Taiwan',
+        company: { name: 'Deloitte', location: 'Taiwan' },
+      },
     },
   },
   {
@@ -234,13 +262,15 @@ const mockItems: WebsetItem[] = [
     source: 'search',
     sourceId: 'src-15',
     websetId: 'ws-1',
-    url: 'https://linkedin.com/in/darren-lee',
     properties: {
       type: 'person',
-      name: 'Darren Lee',
-      position: '業務經理 Sales Executive',
-      location: 'Taipei, Taiwan',
-      company: { name: 'NTT DATA', location: 'Taiwan' },
+      url: 'https://linkedin.com/in/darren-lee',
+      person: {
+        name: 'Darren Lee',
+        position: '業務經理 Sales Executive',
+        location: 'Taipei, Taiwan',
+        company: { name: 'NTT DATA', location: 'Taiwan' },
+      },
     },
   },
   {
@@ -249,13 +279,15 @@ const mockItems: WebsetItem[] = [
     source: 'search',
     sourceId: 'src-16',
     websetId: 'ws-1',
-    url: 'https://linkedin.com/in/ben-chen',
     properties: {
       type: 'person',
-      name: 'Ben Chen',
-      position: 'Senior Sales Manager',
-      location: 'Taipei, Taiwan',
-      company: { name: 'One Pacific', location: 'Taiwan' },
+      url: 'https://linkedin.com/in/ben-chen',
+      person: {
+        name: 'Ben Chen',
+        position: 'Senior Sales Manager',
+        location: 'Taipei, Taiwan',
+        company: { name: 'One Pacific', location: 'Taiwan' },
+      },
     },
   },
   {
@@ -264,13 +296,15 @@ const mockItems: WebsetItem[] = [
     source: 'search',
     sourceId: 'src-17',
     websetId: 'ws-1',
-    url: 'https://linkedin.com/in/guan-xiao',
     properties: {
       type: 'person',
-      name: '林冠孝',
-      position: 'Manufacturing Program Manager',
-      location: 'Taipei, Taiwan',
-      company: { name: 'Gogoro', location: 'Taiwan' },
+      url: 'https://linkedin.com/in/guan-xiao',
+      person: {
+        name: '林冠孝',
+        position: 'Manufacturing Program Manager',
+        location: 'Taipei, Taiwan',
+        company: { name: 'Gogoro', location: 'Taiwan' },
+      },
     },
   },
   {
@@ -279,13 +313,15 @@ const mockItems: WebsetItem[] = [
     source: 'search',
     sourceId: 'src-18',
     websetId: 'ws-1',
-    url: 'https://linkedin.com/in/ming-lun-w',
     properties: {
       type: 'person',
-      name: 'Ming Lun W.',
-      position: 'Partnerships Director',
-      location: 'Taipei, Taiwan',
-      company: { name: 'SHOPLINE', location: 'Taiwan' },
+      url: 'https://linkedin.com/in/ming-lun-w',
+      person: {
+        name: 'Ming Lun W.',
+        position: 'Partnerships Director',
+        location: 'Taipei, Taiwan',
+        company: { name: 'SHOPLINE', location: 'Taiwan' },
+      },
     },
   },
   {
@@ -294,13 +330,15 @@ const mockItems: WebsetItem[] = [
     source: 'search',
     sourceId: 'src-19',
     websetId: 'ws-1',
-    url: 'https://linkedin.com/in/leo-wu',
     properties: {
       type: 'person',
-      name: 'Leo Wu',
-      position: 'Sales Manager',
-      location: 'Taipei, Taiwan',
-      company: { name: 'Freelance', location: 'Taiwan' },
+      url: 'https://linkedin.com/in/leo-wu',
+      person: {
+        name: 'Leo Wu',
+        position: 'Sales Manager',
+        location: 'Taipei, Taiwan',
+        company: { name: 'Freelance', location: 'Taiwan' },
+      },
     },
   },
   {
@@ -309,13 +347,15 @@ const mockItems: WebsetItem[] = [
     source: 'search',
     sourceId: 'src-20',
     websetId: 'ws-1',
-    url: 'https://linkedin.com/in/lisa-wu',
     properties: {
       type: 'person',
-      name: 'Lisa WU',
-      position: 'Procurement Specialist',
-      location: 'Taipei, Taiwan',
-      company: { name: 'CloudMile', location: 'Taiwan' },
+      url: 'https://linkedin.com/in/lisa-wu',
+      person: {
+        name: 'Lisa WU',
+        position: 'Procurement Specialist',
+        location: 'Taipei, Taiwan',
+        company: { name: 'CloudMile', location: 'Taiwan' },
+      },
     },
   },
 ];
@@ -356,7 +396,7 @@ const sortOptions = [
   { id: 'date_added', label: 'Recently Added' },
 ];
 
-export default function WebsetDetailPage() {
+export default function SearchDetailPage() {
   const params = useParams();
   const router = useRouter();
   const [items, setItems] = useState<WebsetItem[]>(mockItems);
@@ -382,27 +422,27 @@ export default function WebsetDetailPage() {
 
   // Try to load real data from API
   useEffect(() => {
-    const loadWebsetData = async () => {
-      const websetId = params.id as string;
+    const loadSearchData = async () => {
+      const searchId = params.id as string;
 
       // Skip loading for mock IDs (1-20)
-      if (parseInt(websetId) <= 20) {
+      if (parseInt(searchId) <= 20) {
         return;
       }
 
       setIsLoading(true);
       try {
-        // Fetch webset details
-        const websetRes = await fetch(`/api/websets/${websetId}`);
-        if (websetRes.ok) {
-          const webset: Webset = await websetRes.json();
-          if (webset.searches?.[0]?.query) {
-            setSearchQuery(webset.searches[0].query);
+        // Fetch search details
+        const searchRes = await fetch(`/api/websets/${searchId}`);
+        if (searchRes.ok) {
+          const searchData: Webset = await searchRes.json();
+          if (searchData.searches?.[0]?.query) {
+            setSearchQuery(searchData.searches[0].query);
           }
         }
 
         // Fetch items
-        const itemsRes = await fetch(`/api/websets/${websetId}/items?limit=100`);
+        const itemsRes = await fetch(`/api/websets/${searchId}/items?limit=100`);
         if (itemsRes.ok) {
           const data = await itemsRes.json();
           if (data.data && data.data.length > 0) {
@@ -411,13 +451,13 @@ export default function WebsetDetailPage() {
           }
         }
       } catch (error) {
-        console.error('Error loading webset:', error);
+        console.error('Error loading search:', error);
       } finally {
         setIsLoading(false);
       }
     };
 
-    loadWebsetData();
+    loadSearchData();
   }, [params.id]);
 
   // Generate API code
@@ -470,13 +510,13 @@ const pollResults = async (websetId) => {
     const csvContent = [
       ['Name', 'Company', 'Position', 'URL'].join(','),
       ...dataToExport.map(item => {
-        const props = item.properties;
-        if (props.type === 'person') {
+        const person = getPersonFromItem(item);
+        if (person) {
           return [
-            `"${props.name || ''}"`,
-            `"${props.company?.name || ''}"`,
-            `"${props.position || ''}"`,
-            `"${item.url || ''}"`,
+            `"${person.name || ''}"`,
+            `"${person.company?.name || ''}"`,
+            `"${person.position || ''}"`,
+            `"${item.properties.url || ''}"`,
           ].join(',');
         }
         return '';
@@ -487,7 +527,7 @@ const pollResults = async (websetId) => {
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `webset-export-${params.id}.csv`;
+    a.download = `talist-export-${params.id}.csv`;
     a.click();
     window.URL.revokeObjectURL(url);
   };
@@ -496,19 +536,19 @@ const pollResults = async (websetId) => {
   const handleSort = (sortId: string) => {
     setCurrentSort(sortId);
     const sorted = [...filteredItems].sort((a, b) => {
-      const propsA = a.properties;
-      const propsB = b.properties;
-      if (propsA.type !== 'person' || propsB.type !== 'person') return 0;
+      const personA = getPersonFromItem(a);
+      const personB = getPersonFromItem(b);
+      if (!personA || !personB) return 0;
 
       switch (sortId) {
         case 'name_asc':
-          return (propsA.name || '').localeCompare(propsB.name || '');
+          return (personA.name || '').localeCompare(personB.name || '');
         case 'name_desc':
-          return (propsB.name || '').localeCompare(propsA.name || '');
+          return (personB.name || '').localeCompare(personA.name || '');
         case 'company_asc':
-          return (propsA.company?.name || '').localeCompare(propsB.company?.name || '');
+          return (personA.company?.name || '').localeCompare(personB.company?.name || '');
         case 'company_desc':
-          return (propsB.company?.name || '').localeCompare(propsA.company?.name || '');
+          return (personB.company?.name || '').localeCompare(personA.company?.name || '');
         default:
           return 0;
       }
@@ -548,7 +588,7 @@ const pollResults = async (websetId) => {
           {/* Logo */}
           <div className="flex items-center gap-2 cursor-pointer" onClick={() => router.push('/dashboard')}>
             <span className="material-icons-outlined text-[var(--primary)]">filter_center_focus</span>
-            <span className="font-semibold text-sm tracking-tight">Websets</span>
+            <span className="font-semibold text-sm tracking-tight">talist.ai</span>
           </div>
 
           {/* Search Input */}
@@ -591,7 +631,7 @@ const pollResults = async (websetId) => {
         {/* Right side */}
         <div className="flex items-center gap-4 text-xs font-medium">
           <button
-            onClick={() => window.open('mailto:feedback@recruit.ai', '_blank')}
+            onClick={() => window.open('mailto:feedback@talist.ai', '_blank')}
             className="flex items-center gap-1 hover:text-[var(--primary)] transition-colors text-[var(--text-secondary)]"
           >
             <span className="material-icons-outlined text-sm">chat_bubble_outline</span>
@@ -610,12 +650,12 @@ const pollResults = async (websetId) => {
       {/* Main Content */}
       <div className="flex flex-1 overflow-hidden">
         {/* Left Sidebar */}
-        <WebsetsSidebar onNewSearch={handleNewSearch} />
+        <SearchesSidebar onNewSearch={handleNewSearch} />
 
         {/* Main Area */}
         <main className="flex-1 flex flex-col bg-[var(--bg-primary)] min-w-0">
           {/* Toolbar */}
-          <WebsetsToolbar
+          <SearchesToolbar
             selectedCount={selectedIds.size}
             totalCount={filteredItems.length}
             onFilter={() => setShowFilterModal(true)}
@@ -628,7 +668,7 @@ const pollResults = async (websetId) => {
           />
 
           {/* Table */}
-          <WebsetTable
+          <ResultsTable
             items={filteredItems}
             criteria={criteria}
             isLoading={isLoading}
@@ -638,7 +678,7 @@ const pollResults = async (websetId) => {
           />
 
           {/* Footer */}
-          <WebsetsFooter matchCount={filteredItems.length} totalCount={items.length} />
+          <SearchesFooter matchCount={filteredItems.length} totalCount={items.length} />
         </main>
 
         {/* Right Panel */}
@@ -649,13 +689,16 @@ const pollResults = async (websetId) => {
           onEnrichmentsChange={setEnrichments}
           itemCount={filteredItems.length}
           matchCount={filteredItems.length}
-          selectedPerson={selectedItem && selectedItem.properties.type === 'person' ? {
-            name: selectedItem.properties.name || '',
-            position: selectedItem.properties.position,
-            company: selectedItem.properties.company?.name,
-            location: selectedItem.properties.location,
-            url: selectedItem.url,
-          } : null}
+          selectedPerson={selectedItem ? (() => {
+            const person = getPersonFromItem(selectedItem);
+            return person ? {
+              name: person.name || '',
+              position: person.position,
+              company: person.company?.name,
+              location: person.location,
+              url: selectedItem.properties.url,
+            } : null;
+          })() : null}
         />
       </div>
 

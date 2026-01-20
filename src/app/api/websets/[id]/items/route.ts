@@ -5,7 +5,7 @@ interface RouteParams {
   params: Promise<{ id: string }>;
 }
 
-// GET - Get items from a Webset
+// GET - Get items from a search
 export async function GET(request: NextRequest, { params }: RouteParams) {
   try {
     const { id } = await params;
@@ -21,9 +21,9 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 
     return NextResponse.json(items);
   } catch (error) {
-    console.error('Error getting webset items:', error);
+    console.error('Error getting search items:', error);
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'Failed to get webset items' },
+      { error: error instanceof Error ? error.message : 'Failed to get search items' },
       { status: 500 }
     );
   }

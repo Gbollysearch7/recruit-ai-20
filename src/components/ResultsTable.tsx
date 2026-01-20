@@ -1,9 +1,9 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { WebsetItem } from '@/types/exa';
+import { WebsetItem, getPersonFromItem } from '@/types/exa';
 
-interface WebsetTableProps {
+interface ResultsTableProps {
   items: WebsetItem[];
   criteria: string[];
   isLoading?: boolean;
@@ -14,8 +14,18 @@ interface WebsetTableProps {
 
 type MatchStatus = 'Match' | 'Miss' | 'Unclear';
 
-// Simulate match status for criteria (in real app, this would come from API)
-function getMatchStatus(seed: number): MatchStatus {
+// Get match status from evaluations if available, otherwise simulate
+function getMatchStatusFromItem(item: WebsetItem, criterionIndex: number): MatchStatus {
+  const evaluation = item.evaluations?.[criterionIndex];
+  if (evaluation) {
+    switch (evaluation.satisfied) {
+      case 'yes': return 'Match';
+      case 'no': return 'Miss';
+      default: return 'Unclear';
+    }
+  }
+  // Fallback to simulated status for mock data
+  const seed = parseInt(item.id) + criterionIndex + 2;
   if (seed % 7 === 0) return 'Miss';
   if (seed % 5 === 0) return 'Unclear';
   return 'Match';
@@ -32,14 +42,20 @@ function getMatchBadgeClass(status: MatchStatus) {
   }
 }
 
-function getReferenceCount(seed: number) {
+function getReferenceCount(item: WebsetItem, criterionIndex: number) {
+  const evaluation = item.evaluations?.[criterionIndex];
+  if (evaluation?.references) {
+    return evaluation.references.length;
+  }
+  // Fallback for mock data
+  const seed = parseInt(item.id) + criterionIndex + 2;
   return ((seed * 7) % 30) + 1;
 }
 
 // Criteria colors matching the design
 const criteriaColors = ['bg-purple-500', 'bg-orange-500', 'bg-blue-500', 'bg-slate-300'];
 
-export function WebsetTable({ items, criteria, isLoading, onSelectionChange, onRowClick, selectedRowId }: WebsetTableProps) {
+export function ResultsTable({ items, criteria, isLoading, onSelectionChange, onRowClick, selectedRowId }: ResultsTableProps) {
   const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set());
 
   const updateSelection = (newSelection: Set<string>) => {
@@ -151,9 +167,9 @@ export function WebsetTable({ items, criteria, isLoading, onSelectionChange, onR
         </thead>
         <tbody>
           {items.map((item, index) => {
-            const props = item.properties;
-            const person = props.type === 'person' ? props : null;
+            const person = getPersonFromItem(item);
             const isSelected = selectedRows.has(item.id);
+            const profileUrl = item.properties.url;
 
             return (
               <tr
@@ -193,23 +209,22 @@ export function WebsetTable({ items, criteria, isLoading, onSelectionChange, onR
                 <td className="text-[var(--text-secondary)]">{person?.company?.name || '-'}</td>
                 <td className="text-[var(--text-tertiary)]">{person?.position || '-'}</td>
                 <td>
-                  {item.url ? (
+                  {profileUrl ? (
                     <a
-                      href={item.url}
+                      href={profileUrl}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="text-[var(--primary)] opacity-80 hover:opacity-100 truncate block max-w-[180px]"
                     >
-                      {item.url.replace('https://', '').replace('www.', '').slice(0, 20)}...
+                      {profileUrl.replace('https://', '').replace('www.', '').slice(0, 20)}...
                     </a>
                   ) : (
                     <span className="text-[var(--text-muted)]">-</span>
                   )}
                 </td>
                 {criteriaColumns.map((col, colIndex) => {
-                  const seed = index + colIndex + 2;
-                  const status = getMatchStatus(seed);
-                  const refs = getReferenceCount(seed);
+                  const status = getMatchStatusFromItem(item, colIndex);
+                  const refs = getReferenceCount(item, colIndex);
                   return (
                     <td key={col.id}>
                       <div className="flex items-center justify-between">

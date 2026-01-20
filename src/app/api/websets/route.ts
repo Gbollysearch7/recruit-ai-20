@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getExaClient } from '@/lib/exa';
 import { CreateEnrichmentParameters } from '@/types/exa';
 
-// POST - Create a new Webset
+// POST - Create a new search
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
@@ -21,24 +21,24 @@ export async function POST(request: NextRequest) {
     }
 
     const client = getExaClient();
-    const webset = await client.createWebset({
+    const result = await client.createWebset({
       query,
       count: count || 20,
       criteria,
       enrichments,
     });
 
-    return NextResponse.json(webset);
+    return NextResponse.json(result);
   } catch (error) {
-    console.error('Error creating webset:', error);
+    console.error('Error creating search:', error);
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'Failed to create webset' },
+      { error: error instanceof Error ? error.message : 'Failed to create search' },
       { status: 500 }
     );
   }
 }
 
-// GET - List all Websets
+// GET - List all searches
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
@@ -46,16 +46,16 @@ export async function GET(request: NextRequest) {
     const cursor = searchParams.get('cursor');
 
     const client = getExaClient();
-    const websets = await client.listWebsets(
+    const results = await client.listWebsets(
       limit ? parseInt(limit) : undefined,
       cursor || undefined
     );
 
-    return NextResponse.json(websets);
+    return NextResponse.json(results);
   } catch (error) {
-    console.error('Error listing websets:', error);
+    console.error('Error listing searches:', error);
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'Failed to list websets' },
+      { error: error instanceof Error ? error.message : 'Failed to list searches' },
       { status: 500 }
     );
   }

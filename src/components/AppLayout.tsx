@@ -39,7 +39,7 @@ export function AppLayout({ children }: AppLayoutProps) {
           <div className="flex items-center justify-between h-12 px-4 border-b border-[var(--border-light)]">
             <Link href="/" className="flex items-center gap-2">
               <span className="material-icons-outlined text-[var(--primary)] text-lg">filter_center_focus</span>
-              <span className="text-sm font-semibold text-[var(--text-primary)] tracking-tight">Recruit.ai</span>
+              <span className="text-sm font-semibold text-[var(--text-primary)] tracking-tight">talist.ai</span>
             </Link>
             <button
               className="lg:hidden p-1 rounded text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-surface)] transition-colors"

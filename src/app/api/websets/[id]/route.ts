@@ -5,24 +5,24 @@ interface RouteParams {
   params: Promise<{ id: string }>;
 }
 
-// GET - Get a specific Webset
+// GET - Get a specific search
 export async function GET(request: NextRequest, { params }: RouteParams) {
   try {
     const { id } = await params;
     const client = getExaClient();
-    const webset = await client.getWebset(id);
+    const result = await client.getWebset(id);
 
-    return NextResponse.json(webset);
+    return NextResponse.json(result);
   } catch (error) {
-    console.error('Error getting webset:', error);
+    console.error('Error getting search:', error);
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'Failed to get webset' },
+      { error: error instanceof Error ? error.message : 'Failed to get search' },
       { status: 500 }
     );
   }
 }
 
-// DELETE - Delete a Webset
+// DELETE - Delete a search
 export async function DELETE(request: NextRequest, { params }: RouteParams) {
   try {
     const { id } = await params;
@@ -31,9 +31,9 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Error deleting webset:', error);
+    console.error('Error deleting search:', error);
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'Failed to delete webset' },
+      { error: error instanceof Error ? error.message : 'Failed to delete search' },
       { status: 500 }
     );
   }

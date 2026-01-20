@@ -12,7 +12,7 @@ interface SavedSearch {
   icon?: 'search' | 'group';
 }
 
-interface WebsetsSidebarProps {
+interface SearchesSidebarProps {
   onNewSearch: () => void;
 }
 
@@ -34,7 +34,7 @@ const monthSearches: SavedSearch[] = [
   { id: '9', title: '5 developers, San Fr...', createdAt: '30 days', icon: 'group' },
 ];
 
-export function WebsetsSidebar({ onNewSearch }: WebsetsSidebarProps) {
+export function SearchesSidebar({ onNewSearch }: SearchesSidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
   const [expandedSections, setExpandedSections] = useState({
