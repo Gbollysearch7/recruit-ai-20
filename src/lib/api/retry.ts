@@ -90,14 +90,8 @@ export async function withRetry<T>(
         config.backoffMultiplier
       );
 
-      // Call retry callback
+      // Call retry callback (logging is handled by the callback)
       config.onRetry?.(attempt, lastError, delay);
-
-      // Log retry
-      console.log(
-        `[Retry] Attempt ${attempt}/${config.maxRetries} failed. Retrying in ${delay}ms...`,
-        lastError.message
-      );
 
       await sleep(delay);
     }

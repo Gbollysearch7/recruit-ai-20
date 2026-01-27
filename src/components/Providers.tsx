@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useState, useEffect } from 'react';
 import { ToastProvider } from './Toast';
+import { ErrorBoundary } from './ErrorBoundary';
 
 type Theme = 'light' | 'dark';
 
@@ -62,10 +63,12 @@ function ThemeProvider({ children }: { children: React.ReactNode }) {
 
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
-    <ThemeProvider>
-      <ToastProvider>
-        {children}
-      </ToastProvider>
-    </ThemeProvider>
+    <ErrorBoundary>
+      <ThemeProvider>
+        <ToastProvider>
+          {children}
+        </ToastProvider>
+      </ThemeProvider>
+    </ErrorBoundary>
   );
 }

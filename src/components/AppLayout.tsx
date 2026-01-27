@@ -107,15 +107,18 @@ export function AppLayout({ children }: AppLayoutProps) {
           {/* User section */}
           <div className="px-2 py-2 border-t border-[var(--border-light)]">
             <div className="flex items-center gap-2 px-2 py-1.5">
-              <div className="w-7 h-7 rounded bg-[var(--primary)] flex items-center justify-center text-white text-[10px] font-medium">
-                JD
+              <div className="w-7 h-7 rounded bg-[var(--text-muted)] flex items-center justify-center text-white text-[10px] font-medium">
+                <span className="material-icons-outlined text-sm">person</span>
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-xs font-medium text-[var(--text-primary)] truncate">John Doe</p>
-                <p className="text-[10px] text-[var(--text-tertiary)] truncate">john@company.com</p>
+                <p className="text-xs font-medium text-[var(--text-primary)] truncate">Guest User</p>
+                <p className="text-[10px] text-[var(--text-tertiary)] truncate">Sign in to save searches</p>
               </div>
-              <button className="p-1 rounded text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-surface)] transition-colors">
-                <span className="material-icons-outlined text-base">logout</span>
+              <button
+                className="p-1 rounded text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-surface)] transition-colors"
+                title="Sign in (coming soon)"
+              >
+                <span className="material-icons-outlined text-base">login</span>
               </button>
             </div>
           </div>
@@ -143,11 +146,14 @@ export function AppLayout({ children }: AppLayoutProps) {
                 <span className="absolute top-1 right-1 w-1.5 h-1.5 bg-[var(--error)] rounded-full" />
               </button>
               <div className="hidden sm:block w-px h-5 bg-[var(--border-light)] mx-1" />
-              <button className="hidden sm:flex items-center gap-1.5 px-2 py-1 rounded text-xs text-[var(--text-secondary)] hover:bg-[var(--bg-surface)] transition-colors">
-                <div className="w-6 h-6 rounded bg-[var(--primary)] flex items-center justify-center text-white text-[10px] font-medium">
-                  JD
+              <button
+                className="hidden sm:flex items-center gap-1.5 px-2 py-1 rounded text-xs text-[var(--text-secondary)] hover:bg-[var(--bg-surface)] transition-colors"
+                title="Sign in (coming soon)"
+              >
+                <div className="w-6 h-6 rounded bg-[var(--text-muted)] flex items-center justify-center text-white">
+                  <span className="material-icons-outlined text-sm">person</span>
                 </div>
-                <span className="font-medium">John</span>
+                <span className="font-medium">Guest</span>
               </button>
             </div>
           </div>

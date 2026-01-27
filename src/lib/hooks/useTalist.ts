@@ -70,8 +70,8 @@ export function useTalist(options: UseTalistOptions = {}): UseTalistReturn {
       setItems(fetchedItems);
       onItemsUpdate?.(fetchedItems);
       return fetchedItems;
-    } catch (err) {
-      console.error('Error fetching items:', err);
+    } catch {
+      // Silently return current items on error - error will be shown via polling
       return items;
     } finally {
       setIsLoadingItems(false);
@@ -125,7 +125,6 @@ export function useTalist(options: UseTalistOptions = {}): UseTalistReturn {
         onError?.(new Error(searchStatus === 'failed' ? 'Search failed' : 'Search canceled'));
       }
     } catch (err) {
-      console.error('Error polling webset:', err);
       const error = err instanceof Error ? err : new Error('An error occurred');
       setError(error.message);
       setIsSearching(false);
@@ -146,14 +145,6 @@ export function useTalist(options: UseTalistOptions = {}): UseTalistReturn {
     setWebset(null);
     setProgress({ found: 0, completion: 0, searchStatus: 'created' });
 
-    // Log the search parameters for debugging
-    console.log('🔍 Starting search with:', {
-      query,
-      count,
-      criteriaCount: criteria.length,
-      enrichmentsCount: enrichments.length,
-    });
-
     try {
       const requestBody = {
         query,
@@ -161,7 +152,6 @@ export function useTalist(options: UseTalistOptions = {}): UseTalistReturn {
         criteria,
         enrichments,
       };
-      console.log('📤 Sending to API:', JSON.stringify(requestBody, null, 2));
 
       const response = await fetch('/api/websets', {
         method: 'POST',
@@ -171,18 +161,11 @@ export function useTalist(options: UseTalistOptions = {}): UseTalistReturn {
 
       if (!response.ok) {
         const errorData = await response.json();
-        console.error('❌ API Error:', errorData);
         // Handle both old format (error) and new format (message)
         throw new Error(errorData.message || errorData.error || 'Failed to create search');
       }
 
       const data: Webset = await response.json();
-      console.log('✅ Webset created:', {
-        id: data.id,
-        status: data.status,
-        searchCount: data.searches?.[0]?.count,
-        searchStatus: data.searches?.[0]?.status,
-      });
       setWebset(data);
       websetIdRef.current = data.id;
 
@@ -194,7 +177,6 @@ export function useTalist(options: UseTalistOptions = {}): UseTalistReturn {
       // Start polling
       pollingRef.current = setTimeout(() => pollWebset(data.id), pollingInterval);
     } catch (err) {
-      console.error('Error creating search:', err);
       const error = err instanceof Error ? err : new Error('An error occurred');
       setError(error.message);
       setIsSearching(false);
@@ -210,8 +192,8 @@ export function useTalist(options: UseTalistOptions = {}): UseTalistReturn {
         await fetch(`/api/websets/${websetIdRef.current}/cancel`, {
           method: 'POST',
         });
-      } catch (err) {
-        console.error('Error canceling search:', err);
+      } catch {
+        // Silently fail - user initiated cancel, UI will update regardless
       }
     }
 
