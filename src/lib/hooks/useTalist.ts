@@ -172,7 +172,8 @@ export function useTalist(options: UseTalistOptions = {}): UseTalistReturn {
       if (!response.ok) {
         const errorData = await response.json();
         console.error('❌ API Error:', errorData);
-        throw new Error(errorData.error || 'Failed to create search');
+        // Handle both old format (error) and new format (message)
+        throw new Error(errorData.message || errorData.error || 'Failed to create search');
       }
 
       const data: Webset = await response.json();

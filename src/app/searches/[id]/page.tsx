@@ -530,7 +530,7 @@ const pollResults = async (websetId) => {
         router.push('/dashboard');
       } else {
         const data = await res.json();
-        throw new Error(data.error || 'Failed to delete search');
+        throw new Error(data.message || data.error || 'Failed to delete search');
       }
     } catch (error) {
       console.error('Error deleting search:', error);
