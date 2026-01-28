@@ -6,15 +6,33 @@ import { useState } from 'react';
 import { ThemeToggle } from './ThemeToggle';
 import { useAuth } from '@/lib/hooks/useAuth';
 import { useToast } from './Toast';
+import {
+  LayoutDashboard,
+  Search,
+  History,
+  Folder,
+  ScanSearch,
+  X,
+  Sparkles,
+  Settings,
+  HelpCircle,
+  LogOut,
+  LogIn,
+  Menu,
+  Bell,
+  ChevronDown,
+  User
+} from 'lucide-react';
 
 interface AppLayoutProps {
   children: React.ReactNode;
 }
 
 const navigation = [
-  { name: 'Dashboard', href: '/dashboard', icon: 'dashboard' },
-  { name: 'Search', href: '/search', icon: 'search' },
-  { name: 'Saved Searches', href: '/searches', icon: 'history' },
+  { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
+  { name: 'Search', href: '/search', icon: Search },
+  { name: 'Saved Searches', href: '/searches', icon: History },
+  { name: 'My Lists', href: '/lists', icon: Folder },
 ];
 
 export function AppLayout({ children }: AppLayoutProps) {
@@ -61,22 +79,21 @@ export function AppLayout({ children }: AppLayoutProps) {
 
       {/* Sidebar */}
       <aside
-        className={`fixed top-0 left-0 z-50 h-full w-[220px] bg-[var(--bg-elevated)] border-r border-[var(--border-light)] transform transition-transform duration-200 ease-out lg:translate-x-0 ${
-          sidebarOpen ? 'translate-x-0' : '-translate-x-full'
-        }`}
+        className={`fixed top-0 left-0 z-50 h-full w-[220px] bg-[var(--bg-elevated)] border-r border-[var(--border-light)] transform transition-transform duration-200 ease-out lg:translate-x-0 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'
+          }`}
       >
         <div className="flex flex-col h-full">
           {/* Logo */}
           <div className="flex items-center justify-between h-12 px-4 border-b border-[var(--border-light)]">
-            <Link href="/" className="flex items-center gap-2">
-              <span className="material-icons-outlined text-[var(--primary)] text-lg">filter_center_focus</span>
+            <Link href="/" className="flex items-center gap-2 text-[var(--primary)] hover:opacity-80 transition-opacity">
+              <ScanSearch className="w-5 h-5" />
               <span className="text-sm font-semibold text-[var(--text-primary)] tracking-tight">talist.ai</span>
             </Link>
             <button
               className="lg:hidden p-1 rounded text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-surface)] transition-colors"
               onClick={() => setSidebarOpen(false)}
             >
-              <span className="material-icons-outlined text-lg">close</span>
+              <X className="w-5 h-5" />
             </button>
           </div>
 
@@ -86,7 +103,7 @@ export function AppLayout({ children }: AppLayoutProps) {
               href="/search"
               className="btn btn-primary w-full justify-center"
             >
-              <span className="material-icons-outlined text-sm">auto_awesome</span>
+              <Sparkles className="w-4 h-4 mr-2" />
               New Search
             </Link>
           </div>
@@ -102,14 +119,13 @@ export function AppLayout({ children }: AppLayoutProps) {
                 <Link
                   key={item.name}
                   href={item.href}
-                  className={`flex items-center gap-2 px-2 py-1.5 rounded text-xs font-medium transition-all ${
-                    isActive
+                  className={`flex items-center gap-2 px-2 py-1.5 rounded text-xs font-medium transition-all ${isActive
                       ? 'bg-[var(--primary-light)] text-[var(--primary)]'
                       : 'text-[var(--text-secondary)] hover:bg-[var(--bg-surface)] hover:text-[var(--text-primary)]'
-                  }`}
+                    }`}
                   onClick={() => setSidebarOpen(false)}
                 >
-                  <span className={`material-icons-outlined text-base ${isActive ? 'text-[var(--primary)]' : 'text-[var(--text-muted)]'}`}>{item.icon}</span>
+                  <item.icon className={`w-4 h-4 ${isActive ? 'text-[var(--primary)]' : 'text-[var(--text-muted)]'}`} />
                   {item.name}
                 </Link>
               );
@@ -122,14 +138,14 @@ export function AppLayout({ children }: AppLayoutProps) {
               href="/settings"
               className="flex items-center gap-2 px-2 py-1.5 rounded text-xs font-medium text-[var(--text-secondary)] hover:bg-[var(--bg-surface)] hover:text-[var(--text-primary)] transition-all"
             >
-              <span className="material-icons-outlined text-base text-[var(--text-muted)]">settings</span>
+              <Settings className="w-4 h-4 text-[var(--text-muted)]" />
               Settings
             </Link>
             <Link
               href="/help"
               className="flex items-center gap-2 px-2 py-1.5 rounded text-xs font-medium text-[var(--text-secondary)] hover:bg-[var(--bg-surface)] hover:text-[var(--text-primary)] transition-all"
             >
-              <span className="material-icons-outlined text-base text-[var(--text-muted)]">help_outline</span>
+              <HelpCircle className="w-4 h-4 text-[var(--text-muted)]" />
               Help & Support
             </Link>
           </div>
@@ -166,7 +182,7 @@ export function AppLayout({ children }: AppLayoutProps) {
                   className="p-1 rounded text-[var(--text-tertiary)] hover:text-[var(--error)] hover:bg-[var(--error-bg)] transition-colors"
                   title="Sign out"
                 >
-                  <span className="material-icons-outlined text-base">logout</span>
+                  <LogOut className="w-4 h-4" />
                 </button>
               </div>
             ) : (
@@ -175,13 +191,13 @@ export function AppLayout({ children }: AppLayoutProps) {
                 className="flex items-center gap-2 px-2 py-1.5 w-full rounded text-xs font-medium text-[var(--text-secondary)] hover:bg-[var(--bg-surface)] hover:text-[var(--text-primary)] transition-all"
               >
                 <div className="w-7 h-7 rounded bg-[var(--text-muted)] flex items-center justify-center text-white">
-                  <span className="material-icons-outlined text-sm">person</span>
+                  <User className="w-4 h-4" />
                 </div>
                 <div className="flex-1 min-w-0 text-left">
                   <p className="text-xs font-medium text-[var(--text-primary)]">Guest User</p>
                   <p className="text-[10px] text-[var(--text-tertiary)]">Click to sign in</p>
                 </div>
-                <span className="material-icons-outlined text-base text-[var(--primary)]">login</span>
+                <LogIn className="w-4 h-4 text-[var(--primary)]" />
               </button>
             )}
           </div>
@@ -198,14 +214,14 @@ export function AppLayout({ children }: AppLayoutProps) {
                 className="lg:hidden p-1.5 -ml-1.5 rounded text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-surface)] transition-colors"
                 onClick={() => setSidebarOpen(true)}
               >
-                <span className="material-icons-outlined text-xl">menu</span>
+                <Menu className="w-5 h-5" />
               </button>
             </div>
 
             <div className="flex items-center gap-1.5">
               <ThemeToggle />
               <button className="relative p-1.5 rounded text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-surface)] transition-colors">
-                <span className="material-icons-outlined text-lg">notifications</span>
+                <Bell className="w-5 h-5" />
                 <span className="absolute top-1 right-1 w-1.5 h-1.5 bg-[var(--error)] rounded-full" />
               </button>
               <div className="hidden sm:block w-px h-5 bg-[var(--border-light)] mx-1" />
@@ -232,7 +248,7 @@ export function AppLayout({ children }: AppLayoutProps) {
                       </div>
                     )}
                     <span className="font-medium max-w-[80px] truncate">{displayName}</span>
-                    <span className="material-icons-outlined text-sm">expand_more</span>
+                    <ChevronDown className="w-3.5 h-3.5" />
                   </button>
                   {showUserMenu && (
                     <>
@@ -250,14 +266,14 @@ export function AppLayout({ children }: AppLayoutProps) {
                           className="flex items-center gap-2 px-3 py-2 text-xs text-[var(--text-secondary)] hover:bg-[var(--bg-surface)] transition-colors"
                           onClick={() => setShowUserMenu(false)}
                         >
-                          <span className="material-icons-outlined text-sm">settings</span>
+                          <Settings className="w-3.5 h-3.5" />
                           Settings
                         </Link>
                         <button
                           onClick={handleSignOut}
                           className="flex items-center gap-2 px-3 py-2 text-xs text-[var(--error)] hover:bg-[var(--error-bg)] transition-colors w-full"
                         >
-                          <span className="material-icons-outlined text-sm">logout</span>
+                          <LogOut className="w-3.5 h-3.5" />
                           Sign Out
                         </button>
                       </div>
@@ -270,7 +286,7 @@ export function AppLayout({ children }: AppLayoutProps) {
                   className="hidden sm:flex items-center gap-1.5 px-2 py-1 rounded text-xs text-[var(--text-secondary)] hover:bg-[var(--bg-surface)] transition-colors"
                 >
                   <div className="w-6 h-6 rounded bg-[var(--text-muted)] flex items-center justify-center text-white">
-                    <span className="material-icons-outlined text-sm">person</span>
+                    <User className="w-4 h-4" />
                   </div>
                   <span className="font-medium">Sign In</span>
                 </button>

@@ -4,6 +4,7 @@ import { createContext, useContext, useState, useEffect } from 'react';
 import { ToastProvider } from './Toast';
 import { ErrorBoundary } from './ErrorBoundary';
 import { AuthProvider } from './AuthProvider';
+import { CookieConsent } from './CookieConsent';
 
 type Theme = 'light' | 'dark';
 
@@ -69,6 +70,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
         <ThemeProvider>
           <ToastProvider>
             {children}
+            <CookieConsent />
           </ToastProvider>
         </ThemeProvider>
       </AuthProvider>

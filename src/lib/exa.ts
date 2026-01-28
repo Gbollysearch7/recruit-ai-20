@@ -111,6 +111,7 @@ class ExaClient {
       count?: number;
       criteria?: string[];
       enrichments?: CreateEnrichmentParameters[];
+      timeout?: number;
     },
     requestId?: string
   ): Promise<Webset> {
@@ -145,6 +146,7 @@ class ExaClient {
       method: 'POST',
       body: JSON.stringify(body),
       requestId,
+      timeout: params.timeout,
     });
   }
 

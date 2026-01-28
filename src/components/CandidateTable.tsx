@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useMemo, useRef, useEffect } from 'react';
+import Link from 'next/link';
 import {
   useReactTable,
   getCoreRowModel,
@@ -197,12 +198,16 @@ export function CandidateTable({ items, isLoading }: CandidateTableProps) {
               .toUpperCase() || '?';
 
             return (
-              <div className="flex items-center gap-3">
+              <Link
+                href={`/candidate/${row.original.id}`}
+                className="flex items-center gap-3 hover:opacity-80 transition-opacity group"
+                onClick={(e) => e.stopPropagation()}
+              >
                 {person.pictureUrl ? (
                   <img
                     src={person.pictureUrl}
                     alt={person.name || ''}
-                    className="h-9 w-9 rounded-full object-cover ring-2 ring-white shadow-sm"
+                    className="h-9 w-9 rounded-full object-cover ring-2 ring-white shadow-sm group-hover:ring-[var(--primary)] transition-all"
                   />
                 ) : (
                   <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-[var(--primary)] to-[var(--primary-hover)] text-white shadow-sm">
@@ -210,11 +215,11 @@ export function CandidateTable({ items, isLoading }: CandidateTableProps) {
                   </div>
                 )}
                 <div>
-                  <span className="font-medium text-[var(--text-primary)]">
+                  <span className="font-medium text-[var(--text-primary)] group-hover:text-[var(--primary)] transition-colors underline decoration-transparent group-hover:decoration-[var(--primary)] underline-offset-2">
                     {person.name || 'Unknown'}
                   </span>
                 </div>
-              </div>
+              </Link>
             );
           },
         }
@@ -578,9 +583,9 @@ export function CandidateTable({ items, isLoading }: CandidateTableProps) {
                       {header.isPlaceholder
                         ? null
                         : flexRender(
-                            header.column.columnDef.header,
-                            header.getContext()
-                          )}
+                          header.column.columnDef.header,
+                          header.getContext()
+                        )}
                     </th>
                   ))}
                 </tr>

@@ -452,3 +452,164 @@ input[type="checkbox"] {
 .animate-slide-out {
   animation: slide-out 0.2s ease-in forwards;
 }
+
+/* Page Transition Animations */
+@keyframes page-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes page-slide-in-right {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-page-in {
+  animation: page-fade-in 0.3s ease-out;
+}
+
+.animate-slide-in-right {
+  animation: page-slide-in-right 0.3s ease-out;
+}
+
+.animate-scale-in {
+  animation: scale-in 0.2s ease-out;
+}
+
+/* Staggered animation delays for lists */
+.stagger-1 { animation-delay: 0.05s; }
+.stagger-2 { animation-delay: 0.1s; }
+.stagger-3 { animation-delay: 0.15s; }
+.stagger-4 { animation-delay: 0.2s; }
+.stagger-5 { animation-delay: 0.25s; }
+
+/* Progress bar animation */
+@keyframes progress-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+.animate-progress-pulse {
+  animation: progress-pulse 1.5s ease-in-out infinite;
+}
+
+/* Smooth progress bar fill */
+.progress-bar-fill {
+  transition: width 0.5s ease-out;
+}
+
+/* Hover card fade */
+@keyframes hover-card-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.animate-hover-card {
+  animation: hover-card-in 0.15s ease-out;
+}
+
+/* Floating action bar */
+@keyframes float-up {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+.animate-float-up {
+  animation: float-up 0.3s ease-out;
+}
+
+/* Shimmer effect for loading states */
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.shimmer {
+  background: linear-gradient(
+    90deg,
+    var(--bg-surface) 25%,
+    var(--bg-elevated) 50%,
+    var(--bg-surface) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+}
+
+/* Undo toast animation */
+@keyframes undo-progress {
+  from { width: 100%; }
+  to { width: 0%; }
+}
+
+.undo-progress-bar {
+  animation: undo-progress var(--duration, 5s) linear forwards;
+}
+
+/* Card hover lift effect */
+.card-hover {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card-hover:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+/* Table row highlight animation */
+@keyframes row-highlight {
+  0% { background-color: var(--primary-light); }
+  100% { background-color: transparent; }
+}
+
+.animate-row-highlight {
+  animation: row-highlight 1s ease-out;
+}
+
+/* Focus ring animation */
+@keyframes focus-ring-pulse {
+  0%, 100% { box-shadow: 0 0 0 2px var(--primary); }
+  50% { box-shadow: 0 0 0 4px var(--primary); }
+}
+
+.focus-ring-pulse:focus-visible {
+  animation: focus-ring-pulse 1s ease-in-out infinite;
+}

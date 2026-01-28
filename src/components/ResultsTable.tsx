@@ -1,7 +1,22 @@
 'use client';
 
 import { useState, useMemo } from 'react';
+import Link from 'next/link';
 import { WebsetItem, getPersonFromItem } from '@/types/exa';
+import { useCandidates } from '@/lib/hooks/useCandidates';
+import { useAuth } from '@/lib/hooks/useAuth';
+import { useToast } from './Toast';
+import { AddToListDialog } from './AddToListDialog';
+import {
+  User,
+  Building2,
+  Briefcase,
+  Link as LinkIcon,
+  ListPlus,
+  Bookmark,
+  CheckCircle,
+  Loader2
+} from 'lucide-react';
 
 interface ResultsTableProps {
   items: WebsetItem[];
@@ -10,6 +25,7 @@ interface ResultsTableProps {
   onSelectionChange?: (selectedIds: Set<string>) => void;
   onRowClick?: (item: WebsetItem) => void;
   selectedRowId?: string | null;
+  searchId?: string;
 }
 
 type MatchStatus = 'Match' | 'Miss' | 'Unclear';
@@ -55,8 +71,16 @@ function getReferenceCount(item: WebsetItem, criterionIndex: number) {
 // Criteria colors matching the design
 const criteriaColors = ['bg-purple-500', 'bg-orange-500', 'bg-blue-500', 'bg-slate-300'];
 
-export function ResultsTable({ items, criteria, isLoading, onSelectionChange, onRowClick, selectedRowId }: ResultsTableProps) {
+export function ResultsTable({ items, criteria, isLoading, onSelectionChange, onRowClick, selectedRowId, searchId }: ResultsTableProps) {
   const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set());
+  const [savingIds, setSavingIds] = useState<Set<string>>(new Set());
+  const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
+  const [addToListItem, setAddToListItem] = useState<{ id: string; name: string } | null>(null);
+  const [bulkAddToList, setBulkAddToList] = useState(false);
+
+  const { saveCandidate } = useCandidates();
+  const { isAuthenticated } = useAuth();
+  const { addToast } = useToast();
 
   const updateSelection = (newSelection: Set<string>) => {
     setSelectedRows(newSelection);
@@ -79,6 +103,62 @@ export function ResultsTable({ items, criteria, isLoading, onSelectionChange, on
     } else {
       updateSelection(new Set(items.map(item => item.id)));
     }
+  };
+
+  const handleSaveCandidate = async (item: WebsetItem, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!isAuthenticated) {
+      addToast('Please sign in to save candidates', 'error');
+      return;
+    }
+    if (savingIds.has(item.id) || savedIds.has(item.id)) return;
+
+    setSavingIds(prev => new Set([...prev, item.id]));
+    try {
+      const person = getPersonFromItem(item);
+      const saved = await saveCandidate({
+        name: person?.name || 'Unknown',
+        company: person?.company?.name,
+        title: person?.position,
+        linkedin: item.properties.url,
+        avatar: person?.pictureUrl,
+        source: `exa_search:${searchId || 'unknown'}`,
+      });
+      if (saved) {
+        setSavedIds(prev => new Set([...prev, item.id]));
+        addToast(`Saved ${person?.name || 'candidate'}`, 'success');
+      } else {
+        addToast('Failed to save candidate', 'error');
+      }
+    } finally {
+      setSavingIds(prev => {
+        const next = new Set(prev);
+        next.delete(item.id);
+        return next;
+      });
+    }
+  };
+
+  const handleAddToList = (item: WebsetItem, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!isAuthenticated) {
+      addToast('Please sign in to add to list', 'error');
+      return;
+    }
+    const person = getPersonFromItem(item);
+    setAddToListItem({ id: item.id, name: person?.name || 'Unknown' });
+  };
+
+  const handleBulkAddToList = () => {
+    if (!isAuthenticated) {
+      addToast('Please sign in to add to list', 'error');
+      return;
+    }
+    if (selectedRows.size === 0) {
+      addToast('Select candidates first', 'error');
+      return;
+    }
+    setBulkAddToList(true);
   };
 
   // Memoize criteria columns
@@ -133,25 +213,25 @@ export function ResultsTable({ items, criteria, isLoading, onSelectionChange, on
             <th className="w-10 text-center">#</th>
             <th className="w-48">
               <div className="flex items-center gap-2">
-                <span className="material-icons-outlined text-sm opacity-50">person</span>
+                <User className="w-3.5 h-3.5 opacity-50" />
                 Name
               </div>
             </th>
             <th className="w-40">
               <div className="flex items-center gap-2">
-                <span className="material-icons-outlined text-sm opacity-50">business</span>
+                <Building2 className="w-3.5 h-3.5 opacity-50" />
                 Company
               </div>
             </th>
             <th className="w-48">
               <div className="flex items-center gap-2">
-                <span className="material-icons-outlined text-sm opacity-50">work_outline</span>
+                <Briefcase className="w-3.5 h-3.5 opacity-50" />
                 Job Title
               </div>
             </th>
             <th className="w-48">
               <div className="flex items-center gap-2">
-                <span className="material-icons-outlined text-sm opacity-50">link</span>
+                <LinkIcon className="w-3.5 h-3.5 opacity-50" />
                 URL
               </div>
             </th>
@@ -163,6 +243,20 @@ export function ResultsTable({ items, criteria, isLoading, onSelectionChange, on
                 </div>
               </th>
             ))}
+            <th className="w-24 text-center">
+              <div className="flex items-center justify-center gap-1">
+                Actions
+                {selectedRows.size > 0 && (
+                  <button
+                    onClick={handleBulkAddToList}
+                    className="ml-1 p-0.5 rounded hover:bg-[var(--bg-surface)] text-[var(--primary)]"
+                    title={`Add ${selectedRows.size} to list`}
+                  >
+                    <ListPlus className="w-4 h-4" />
+                  </button>
+                )}
+              </div>
+            </th>
           </tr>
         </thead>
         <tbody>
@@ -175,13 +269,12 @@ export function ResultsTable({ items, criteria, isLoading, onSelectionChange, on
               <tr
                 key={item.id}
                 onClick={() => onRowClick?.(item)}
-                className={`transition-colors cursor-pointer ${
-                  selectedRowId === item.id
-                    ? 'bg-blue-50 dark:bg-blue-900/20'
-                    : isSelected
+                className={`transition-colors cursor-pointer ${selectedRowId === item.id
+                  ? 'bg-blue-50 dark:bg-blue-900/20'
+                  : isSelected
                     ? 'bg-[var(--primary-light)]'
                     : 'hover:bg-[var(--bg-surface)]'
-                }`}
+                  }`}
               >
                 <td className="text-center">
                   <input
@@ -203,7 +296,13 @@ export function ResultsTable({ items, criteria, isLoading, onSelectionChange, on
                         />
                       )}
                     </div>
-                    <span className="font-medium truncate">{person?.name || '-'}</span>
+                    <Link
+                      href={`/candidate/${item.id}`}
+                      onClick={(e) => e.stopPropagation()}
+                      className="font-medium truncate hover:text-[var(--primary)] hover:underline transition-colors block"
+                    >
+                      {person?.name || '-'}
+                    </Link>
                   </div>
                 </td>
                 <td className="text-[var(--text-secondary)]">{person?.company?.name || '-'}</td>
@@ -236,11 +335,59 @@ export function ResultsTable({ items, criteria, isLoading, onSelectionChange, on
                     </td>
                   );
                 })}
+                <td className="text-center">
+                  <div className="flex items-center justify-center gap-1">
+                    <button
+                      onClick={(e) => handleSaveCandidate(item, e)}
+                      disabled={savingIds.has(item.id) || savedIds.has(item.id)}
+                      className={`p-1 rounded transition-colors ${savedIds.has(item.id)
+                        ? 'text-[var(--success)] cursor-default'
+                        : 'text-[var(--text-tertiary)] hover:text-[var(--primary)] hover:bg-[var(--bg-surface)]'
+                        }`}
+                      title={savedIds.has(item.id) ? 'Saved' : 'Save candidate'}
+                    >
+                      {savingIds.has(item.id) ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : savedIds.has(item.id) ? (
+                        <CheckCircle className="w-4 h-4" />
+                      ) : (
+                        <Bookmark className="w-4 h-4" />
+                      )}
+                    </button>
+                    <button
+                      onClick={(e) => handleAddToList(item, e)}
+                      className="p-1 rounded text-[var(--text-tertiary)] hover:text-[var(--primary)] hover:bg-[var(--bg-surface)] transition-colors"
+                      title="Add to list"
+                    >
+                      <ListPlus className="w-4 h-4" />
+                    </button>
+                  </div>
+                </td>
               </tr>
             );
           })}
         </tbody>
       </table>
+
+      {/* Add to List Dialog - Single */}
+      {addToListItem && (
+        <AddToListDialog
+          isOpen={!!addToListItem}
+          onClose={() => setAddToListItem(null)}
+          candidateId={addToListItem.id}
+          candidateName={addToListItem.name}
+        />
+      )}
+
+      {/* Add to List Dialog - Bulk */}
+      {bulkAddToList && (
+        <AddToListDialog
+          isOpen={bulkAddToList}
+          onClose={() => setBulkAddToList(false)}
+          candidateIds={Array.from(selectedRows)}
+          onSuccess={() => updateSelection(new Set())}
+        />
+      )}
     </div>
   );
 }

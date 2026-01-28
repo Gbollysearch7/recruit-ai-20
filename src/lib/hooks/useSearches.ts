@@ -134,16 +134,28 @@ export function useSearches() {
     }
   }, [supabase, user]);
 
-  // Get a single search by ID
+  // Get a single search by ID (supports both internal id and exa_webset_id)
   const getSearch = useCallback(async (id: string): Promise<ExaSearch | null> => {
     if (!supabase) return null;
 
     try {
+      // First try by exa_webset_id (most common when coming from search URLs)
+      const { data: dataByWebsetId, error: websetError } = await supabase
+        .from('exa_searches')
+        .select('*')
+        .eq('exa_webset_id', id)
+        .maybeSingle();
+
+      if (!websetError && dataByWebsetId) {
+        return dataByWebsetId;
+      }
+
+      // Fall back to internal id
       const { data, error } = await supabase
         .from('exa_searches')
         .select('*')
         .eq('id', id)
-        .single();
+        .maybeSingle();
 
       if (error) throw error;
       return data;
