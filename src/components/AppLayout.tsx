@@ -21,7 +21,8 @@ import {
   Menu,
   Bell,
   ChevronDown,
-  User
+  User,
+  Kanban
 } from 'lucide-react';
 
 interface AppLayoutProps {
@@ -31,6 +32,7 @@ interface AppLayoutProps {
 const navigation = [
   { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
   { name: 'Search', href: '/search', icon: Search },
+  { name: 'Pipeline', href: '/pipeline', icon: Kanban },
   { name: 'Saved Searches', href: '/searches', icon: History },
   { name: 'My Lists', href: '/lists', icon: Folder },
 ];
@@ -39,20 +41,8 @@ export function AppLayout({ children }: AppLayoutProps) {
   const pathname = usePathname();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
-  const { user, profile, isLoading, isAuthenticated, isConfigured, signInWithGoogle, signOut } = useAuth();
+  const { user, profile, isLoading, isAuthenticated, signOut } = useAuth();
   const { addToast } = useToast();
-
-  const handleSignIn = async () => {
-    if (!isConfigured) {
-      addToast('Authentication is not configured', 'error');
-      return;
-    }
-    try {
-      await signInWithGoogle();
-    } catch {
-      addToast('Failed to sign in. Please try again.', 'error');
-    }
-  };
 
   const handleSignOut = async () => {
     try {
@@ -186,8 +176,8 @@ export function AppLayout({ children }: AppLayoutProps) {
                 </button>
               </div>
             ) : (
-              <button
-                onClick={handleSignIn}
+              <Link
+                href="/login"
                 className="flex items-center gap-2 px-2 py-1.5 w-full rounded text-xs font-medium text-[var(--text-secondary)] hover:bg-[var(--bg-surface)] hover:text-[var(--text-primary)] transition-all"
               >
                 <div className="w-7 h-7 rounded bg-[var(--text-muted)] flex items-center justify-center text-white">
@@ -198,7 +188,7 @@ export function AppLayout({ children }: AppLayoutProps) {
                   <p className="text-[10px] text-[var(--text-tertiary)]">Click to sign in</p>
                 </div>
                 <LogIn className="w-4 h-4 text-[var(--primary)]" />
-              </button>
+              </Link>
             )}
           </div>
         </div>
@@ -281,15 +271,15 @@ export function AppLayout({ children }: AppLayoutProps) {
                   )}
                 </div>
               ) : (
-                <button
-                  onClick={handleSignIn}
+                <Link
+                  href="/login"
                   className="hidden sm:flex items-center gap-1.5 px-2 py-1 rounded text-xs text-[var(--text-secondary)] hover:bg-[var(--bg-surface)] transition-colors"
                 >
                   <div className="w-6 h-6 rounded bg-[var(--text-muted)] flex items-center justify-center text-white">
                     <User className="w-4 h-4" />
                   </div>
                   <span className="font-medium">Sign In</span>
-                </button>
+                </Link>
               )}
             </div>
           </div>

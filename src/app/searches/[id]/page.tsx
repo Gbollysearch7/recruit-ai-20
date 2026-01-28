@@ -59,7 +59,7 @@ export default function SearchDetailPage() {
   const router = useRouter();
   const { addToast } = useToast();
   const { isAuthenticated, user, isLoading: authLoading } = useAuth();
-  const { getSearch, createSearch } = useSearches();
+  const { getSearch, createSearch, updateSearch } = useSearches();
 
   // Data states
   const [items, setItems] = useState<WebsetItem[]>([]);
@@ -70,6 +70,7 @@ export default function SearchDetailPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedItem, setSelectedItem] = useState<WebsetItem | null>(null);
   const [searchShareInfo, setSearchShareInfo] = useState<{ shareId?: string | null; isPublic?: boolean }>({});
+  const [isSaved, setIsSaved] = useState(false);
 
   // Loading states
   const [isLoading, setIsLoading] = useState(true);
@@ -377,6 +378,51 @@ const pollResults = async (websetId) => {
     }
   };
 
+  // Handle save search to saved searches
+  const handleSaveSearch = async () => {
+    if (!isAuthenticated) {
+      addToast('Please sign in to save searches', 'error');
+      return;
+    }
+
+    const searchId = params.id as string;
+    try {
+      // Check if already saved by looking for existing search
+      const existingSearch = await getSearch(searchId);
+
+      if (existingSearch) {
+        // Update existing search with current results
+        await updateSearch({
+          id: existingSearch.id,
+          results: items,
+          resultsCount: items.length,
+        });
+        setIsSaved(true);
+        addToast('Search saved successfully', 'success');
+      } else {
+        // Create new saved search entry
+        const result = await createSearch({
+          name: searchQuery,
+          query: searchQuery,
+          count: items.length,
+          criteria,
+          enrichments: enrichments.map(e => ({ description: e, format: 'text' })),
+          exaWebsetId: searchId,
+        });
+
+        if (result) {
+          setIsSaved(true);
+          addToast('Search saved to your library', 'success');
+        } else {
+          throw new Error('Failed to save');
+        }
+      }
+    } catch (error) {
+      console.error('Save search error:', error);
+      addToast('Failed to save search', 'error');
+    }
+  };
+
   // Handle refine search (create new search with current criteria)
   const handleRefineSearch = async () => {
     addToast('Starting new search...', 'info');
@@ -431,40 +477,34 @@ const pollResults = async (websetId) => {
             <span className="font-semibold text-sm tracking-tight">talist.ai</span>
           </div>
 
-          {/* Search Input */}
-          <div className="flex-1 max-w-2xl relative">
-            <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
-              <span className="material-icons-outlined text-sm text-[var(--text-muted)]">search</span>
-            </div>
-            <input
-              type="text"
-              className="input-base pl-9 pr-24"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search query..."
-            />
-            <div className="absolute inset-y-0 right-3 flex items-center gap-2">
-              <button
-                onClick={handleShare}
-                className="material-icons-outlined text-sm text-[var(--text-muted)] cursor-pointer hover:text-[var(--primary)]"
-                title="Share"
-              >
-                share
-              </button>
-              <button
-                onClick={handleCopySearch}
-                className="material-icons-outlined text-sm text-[var(--text-muted)] cursor-pointer hover:text-[var(--primary)]"
-                title="Copy"
-              >
-                content_copy
-              </button>
-              <button
-                onClick={() => router.push('/searches')}
-                className="material-icons-outlined text-sm text-[var(--text-muted)] cursor-pointer hover:text-[var(--primary)]"
-                title="History"
-              >
-                history
-              </button>
+          {/* Search Query Display */}
+          <div className="flex-1 max-w-2xl flex items-center gap-3">
+            <div className="flex-1 bg-[var(--bg-surface)] rounded-lg border border-[var(--border-light)] px-4 py-2 flex items-center gap-3">
+              <span className="material-icons-outlined text-base text-[var(--primary)]">search</span>
+              <span className="text-sm text-[var(--text-primary)] truncate flex-1 font-medium">{searchQuery || 'Untitled Search'}</span>
+              <div className="flex items-center gap-1 border-l border-[var(--border-light)] pl-3">
+                <button
+                  onClick={handleCopySearch}
+                  className="p-1.5 rounded hover:bg-[var(--bg-primary)] text-[var(--text-muted)] hover:text-[var(--primary)] transition-colors"
+                  title="Copy search query"
+                >
+                  <span className="material-icons-outlined text-sm">content_copy</span>
+                </button>
+                <button
+                  onClick={handleShare}
+                  className="p-1.5 rounded hover:bg-[var(--bg-primary)] text-[var(--text-muted)] hover:text-[var(--primary)] transition-colors"
+                  title="Share search"
+                >
+                  <span className="material-icons-outlined text-sm">share</span>
+                </button>
+                <button
+                  onClick={() => router.push('/searches')}
+                  className="p-1.5 rounded hover:bg-[var(--bg-primary)] text-[var(--text-muted)] hover:text-[var(--primary)] transition-colors"
+                  title="View all searches"
+                >
+                  <span className="material-icons-outlined text-sm">history</span>
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -479,11 +519,16 @@ const pollResults = async (websetId) => {
           )}
           <ThemeToggle />
           <button
-            onClick={() => window.open('mailto:feedback@talist.ai', '_blank')}
-            className="flex items-center gap-1 hover:text-[var(--primary)] transition-colors text-[var(--text-secondary)]"
+            onClick={() => {
+              const subject = encodeURIComponent(`Feedback for talist.ai - ${searchQuery}`);
+              const body = encodeURIComponent(`Hi talist.ai team,\n\nI have some feedback about:\n\nSearch: ${searchQuery}\nURL: ${window.location.href}\n\nFeedback:\n\n`);
+              window.open(`mailto:feedback@talist.ai?subject=${subject}&body=${body}`, '_blank');
+            }}
+            className="flex items-center gap-1.5 px-2 py-1 rounded hover:bg-[var(--bg-surface)] hover:text-[var(--primary)] transition-colors text-[var(--text-secondary)]"
+            title="Send feedback about this search"
           >
-            <span className="material-icons-outlined text-sm">chat_bubble_outline</span>
-            Feedback
+            <span className="material-icons-outlined text-sm">rate_review</span>
+            <span>Feedback</span>
           </button>
           <button className="flex items-center gap-1 hover:text-[var(--primary)] transition-colors text-[var(--text-secondary)]">
             <span className="material-icons-outlined text-sm">toll</span>
@@ -520,7 +565,9 @@ const pollResults = async (websetId) => {
             onDelete={() => setShowDeleteModal(true)}
             onDeleteSearch={() => setShowDeleteSearchModal(true)}
             onExport={handleExport}
+            onSaveSearch={isAuthenticated ? handleSaveSearch : undefined}
             isExporting={isExporting}
+            isSaved={isSaved}
           />
 
           {/* Table */}

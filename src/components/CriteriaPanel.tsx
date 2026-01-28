@@ -37,10 +37,14 @@ interface CriteriaPanelProps {
 }
 
 const availableEnrichments = [
-  'Email',
-  'Interests',
-  'Seniority',
+  'LinkedIn URL',
+  'GitHub Profile',
+  'Work Email',
+  'Twitter/X',
+  'Personal Website',
+  'Phone Number',
   'Skills',
+  'Interests',
 ];
 
 // Criteria colors matching the design
@@ -402,9 +406,14 @@ export function CriteriaPanel({
                 </div>
               </>
             ) : (
-              <div className="text-center py-8">
-                <User className="w-8 h-8 text-[var(--text-muted)] mb-2 mx-auto" />
-                <p className="text-[11px] text-[var(--text-muted)]">Select a row to see details</p>
+              <div className="text-center py-12">
+                <div className="w-14 h-14 rounded-full bg-[var(--bg-surface)] flex items-center justify-center mx-auto mb-3">
+                  <User className="w-7 h-7 text-[var(--text-muted)]" />
+                </div>
+                <p className="text-sm font-medium text-[var(--text-secondary)] mb-1">No candidate selected</p>
+                <p className="text-xs text-[var(--text-muted)] max-w-[180px] mx-auto">
+                  Click on a candidate row in the table to view their details here
+                </p>
               </div>
             )}
           </div>

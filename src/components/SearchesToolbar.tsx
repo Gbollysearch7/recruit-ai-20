@@ -12,7 +12,8 @@ import {
   Zap,
   Users,
   ChevronDown,
-  Loader2
+  Loader2,
+  Bookmark
 } from 'lucide-react';
 
 interface SearchesToolbarProps {
@@ -26,7 +27,9 @@ interface SearchesToolbarProps {
   onDelete?: () => void;
   onDeleteSearch?: () => void;
   onExport?: () => void;
+  onSaveSearch?: () => void;
   isExporting?: boolean;
+  isSaved?: boolean;
 }
 
 export function SearchesToolbar({
@@ -40,7 +43,9 @@ export function SearchesToolbar({
   onDelete,
   onDeleteSearch,
   onExport,
+  onSaveSearch,
   isExporting = false,
+  isSaved = false,
 }: SearchesToolbarProps) {
   return (
     <div className="h-10 border-b border-[var(--border-light)] flex items-center justify-between px-4 shrink-0 bg-[var(--bg-primary)]">
@@ -108,6 +113,16 @@ export function SearchesToolbar({
       </div>
 
       <div className="flex items-center gap-2">
+        {onSaveSearch && (
+          <button
+            onClick={onSaveSearch}
+            className={`btn text-xs h-7 px-2.5 ${isSaved ? 'btn-secondary text-[var(--success)]' : 'btn-secondary'}`}
+            title={isSaved ? 'Search saved' : 'Save to Saved Searches'}
+          >
+            <Bookmark className={`w-3.5 h-3.5 ${isSaved ? 'fill-current' : ''}`} />
+            {isSaved ? 'Saved' : 'Save'}
+          </button>
+        )}
         <button
           onClick={onMonitor}
           className="btn btn-secondary text-xs h-7 px-2.5"
@@ -120,7 +135,7 @@ export function SearchesToolbar({
           className="btn btn-primary text-xs h-7 px-2.5"
         >
           <Zap className="w-3.5 h-3.5" />
-          Enrich
+          Add Enrichment
         </button>
       </div>
     </div>
