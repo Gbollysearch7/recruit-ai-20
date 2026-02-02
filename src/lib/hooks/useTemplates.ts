@@ -39,7 +39,8 @@ export function useTemplates() {
 
       if (error) throw error;
       setTemplates(data || []);
-    } catch {
+    } catch (err) {
+      console.error('Failed to fetch templates:', err);
       setTemplates([]);
     } finally {
       setIsLoading(false);
@@ -60,7 +61,8 @@ export function useTemplates() {
 
       if (error) throw error;
       setPublicTemplates(data || []);
-    } catch {
+    } catch (err) {
+      console.error('Failed to fetch public templates:', err);
       setPublicTemplates([]);
     }
   }, [supabase]);
@@ -90,7 +92,8 @@ export function useTemplates() {
       // Update local state
       setTemplates(prev => [data, ...prev]);
       return data;
-    } catch {
+    } catch (err) {
+      console.error('Failed to create template:', err);
       return null;
     }
   }, [supabase, user]);
@@ -122,7 +125,8 @@ export function useTemplates() {
       // Update local state
       setTemplates(prev => prev.map(t => t.id === id ? data : t));
       return data;
-    } catch {
+    } catch (err) {
+      console.error('Failed to update template:', err);
       return null;
     }
   }, [supabase, user]);
@@ -143,7 +147,8 @@ export function useTemplates() {
       // Update local state
       setTemplates(prev => prev.filter(t => t.id !== id));
       return true;
-    } catch {
+    } catch (err) {
+      console.error('Failed to delete template:', err);
       return false;
     }
   }, [supabase, user]);
@@ -178,7 +183,8 @@ export function useTemplates() {
       }
 
       return data;
-    } catch {
+    } catch (err) {
+      console.error('Failed to use template:', err);
       return null;
     }
   }, [supabase, user]);
@@ -196,7 +202,8 @@ export function useTemplates() {
 
       if (error) throw error;
       return data;
-    } catch {
+    } catch (err) {
+      console.error('Failed to get template:', err);
       return null;
     }
   }, [supabase]);

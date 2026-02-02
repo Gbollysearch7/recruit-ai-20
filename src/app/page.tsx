@@ -1,6 +1,10 @@
+'use client';
+
 import Link from 'next/link';
+import { useAuth } from '@/lib/hooks/useAuth';
 
 export default function LandingPage() {
+  const { isAuthenticated, isLoading } = useAuth();
   return (
     <div className="min-h-screen bg-[var(--bg-primary)] overflow-auto">
       {/* Navigation */}
@@ -8,7 +12,7 @@ export default function LandingPage() {
         <div className="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <span className="material-icons-outlined text-[var(--primary)] text-xl">filter_center_focus</span>
-            <span className="text-sm font-semibold text-[var(--text-primary)] tracking-tight">talist.ai</span>
+            <span className="text-sm font-semibold text-[var(--text-primary)] tracking-tight">Recruit AI</span>
           </div>
           <div className="hidden md:flex items-center gap-6">
             <a href="#features" className="text-xs text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors">Features</a>
@@ -17,17 +21,28 @@ export default function LandingPage() {
             <a href="#pricing" className="text-xs text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors">Pricing</a>
           </div>
           <div className="flex items-center gap-3">
-            <Link
-              href="/dashboard"
-              className="text-xs text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors hidden sm:block"
-            >
-              Sign in
-            </Link>
+            {!isLoading && (
+              isAuthenticated ? (
+                <Link
+                  href="/dashboard"
+                  className="text-xs text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors hidden sm:block"
+                >
+                  Dashboard
+                </Link>
+              ) : (
+                <Link
+                  href="/auth/login"
+                  className="text-xs text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors hidden sm:block"
+                >
+                  Sign in
+                </Link>
+              )
+            )}
             <Link
               href="/search"
               className="btn btn-primary"
             >
-              Get Started
+              {isAuthenticated ? 'New Search' : 'Get Started'}
               <span className="material-icons-outlined text-sm">arrow_forward</span>
             </Link>
           </div>
@@ -83,7 +98,7 @@ export default function LandingPage() {
                 <div className="w-2.5 h-2.5 rounded-full bg-[#28c840]" />
                 <div className="ml-3 flex-1 max-w-md">
                   <div className="h-5 bg-[var(--bg-primary)] rounded text-[10px] flex items-center px-2.5 text-[var(--text-muted)]">
-                    talist.ai/search
+                    recruit-ai.com/search
                   </div>
                 </div>
               </div>
@@ -249,7 +264,7 @@ export default function LandingPage() {
               Built for every hiring need
             </h2>
             <p className="text-sm text-[var(--text-secondary)] max-w-xl mx-auto">
-              Whether you're hiring one engineer or scaling a whole team, talist.ai adapts to your needs.
+              Whether you're hiring one engineer or scaling a whole team, Recruit AI adapts to your workflow.
             </p>
           </div>
 
@@ -342,7 +357,7 @@ export default function LandingPage() {
             <h2 className="text-2xl font-semibold text-[var(--text-primary)] tracking-tight mb-3">
               Loved by hiring teams
             </h2>
-            <p className="text-sm text-[var(--text-secondary)]">See what recruiters are saying about talist.ai</p>
+            <p className="text-sm text-[var(--text-secondary)]">See what recruiters are saying</p>
           </div>
 
           <div className="grid md:grid-cols-3 gap-4">
@@ -380,14 +395,14 @@ export default function LandingPage() {
             <h2 className="text-2xl font-semibold text-[var(--text-primary)] tracking-tight mb-3">
               Frequently asked questions
             </h2>
-            <p className="text-sm text-[var(--text-secondary)]">Everything you need to know about talist.ai</p>
+            <p className="text-sm text-[var(--text-secondary)]">Common questions about our platform</p>
           </div>
 
           <div className="space-y-4">
             {[
               {
-                q: 'How does talist.ai find candidates?',
-                a: 'talist.ai uses Exa AI\'s Websets technology to search the entire public web—including professional profiles, company pages, GitHub, personal websites, and more. Our AI understands natural language queries and verifies each candidate against your specific criteria.'
+                q: 'How does the platform find candidates?',
+                a: 'We use Exa AI\'s Websets technology to search the entire public web—including professional profiles, company pages, GitHub, personal websites, and more. Our AI understands natural language queries and verifies each candidate against your specific criteria.'
               },
               {
                 q: 'Is the data GDPR compliant?',
@@ -431,7 +446,7 @@ export default function LandingPage() {
 
           <div className="grid md:grid-cols-3 gap-4 max-w-4xl mx-auto">
             {[
-              { name: 'Starter', price: '$0', period: 'forever', description: 'Perfect for trying out talist.ai', features: ['10 searches per month', 'Basic candidate data', 'CSV export', 'Email support'], cta: 'Get Started', featured: false },
+              { name: 'Starter', price: '$0', period: 'forever', description: 'Perfect for getting started', features: ['10 searches per month', 'Basic candidate data', 'CSV export', 'Email support'], cta: 'Get Started', featured: false },
               { name: 'Pro', price: '$99', period: 'per month', description: 'For growing teams hiring regularly', features: ['Unlimited searches', 'Enriched profiles', 'Team collaboration', 'ATS integrations', 'Custom criteria', 'Priority support'], cta: 'Start Free Trial', featured: true },
               { name: 'Enterprise', price: 'Custom', period: 'contact us', description: 'For large organizations', features: ['Everything in Pro', 'Custom integrations', 'Dedicated manager', 'SLA guarantees', 'SSO & security', 'Volume discounts'], cta: 'Contact Sales', featured: false },
             ].map((plan, i) => (
@@ -495,7 +510,7 @@ export default function LandingPage() {
             Ready to transform your recruiting?
           </h2>
           <p className="text-white/80 text-sm mb-6 max-w-xl mx-auto">
-            Join hundreds of teams using talist.ai to find exceptional talent faster than ever.
+            Join hundreds of teams using Recruit AI to find exceptional talent faster than ever.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
             <Link
@@ -523,7 +538,7 @@ export default function LandingPage() {
             <div className="md:col-span-2">
               <div className="flex items-center gap-2 mb-3">
                 <span className="material-icons-outlined text-[var(--primary)] text-lg">filter_center_focus</span>
-                <span className="text-sm font-semibold text-white">talist.ai</span>
+                <span className="text-sm font-semibold text-white">Recruit AI</span>
               </div>
               <p className="text-[11px] text-gray-400 leading-relaxed mb-4">
                 AI-powered recruiting for modern teams. Find exceptional talent faster than ever using natural language search powered by Exa AI.
@@ -560,7 +575,7 @@ export default function LandingPage() {
 
           <div className="pt-6 border-t border-gray-800 flex flex-col md:flex-row items-center justify-between gap-3">
             <p className="text-[10px] text-gray-500">
-              © 2026 talist.ai. All rights reserved.
+              © 2026 Recruit AI. All rights reserved.
             </p>
             <p className="text-[10px] text-gray-500">
               Built with Next.js and <a href="https://exa.ai" className="text-gray-400 hover:text-white">Exa AI</a> Websets API

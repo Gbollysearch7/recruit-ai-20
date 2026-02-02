@@ -27,6 +27,7 @@ interface UseTalistReturn {
     criteria: string[],
     enrichments: CreateEnrichmentParameters[]
   ) => Promise<void>;
+  resumeSearch: (websetId: string) => Promise<void>;
   cancelSearch: () => Promise<void>;
   reset: () => void;
 }
@@ -70,13 +71,13 @@ export function useTalist(options: UseTalistOptions = {}): UseTalistReturn {
       setItems(fetchedItems);
       onItemsUpdate?.(fetchedItems);
       return fetchedItems;
-    } catch {
-      // Silently return current items on error - error will be shown via polling
-      return items;
+    } catch (err) {
+      console.error('Failed to fetch items:', err);
+      return [];
     } finally {
       setIsLoadingItems(false);
     }
-  }, [items, onItemsUpdate]);
+  }, [onItemsUpdate]);
 
   const pollWebset = useCallback(async (websetId: string) => {
     if (websetIdRef.current !== websetId) return;
@@ -184,6 +185,18 @@ export function useTalist(options: UseTalistOptions = {}): UseTalistReturn {
     }
   }, [clearPolling, pollingInterval, pollWebset, onError]);
 
+  const resumeSearch = useCallback(async (websetId: string) => {
+    clearPolling();
+    setIsSearching(true);
+    setError(null);
+    setItems([]);
+    setProgress({ found: 0, completion: 0, searchStatus: 'running' });
+    websetIdRef.current = websetId;
+
+    // Start polling the existing webset
+    pollingRef.current = setTimeout(() => pollWebset(websetId), 0);
+  }, [clearPolling, pollWebset]);
+
   const cancelSearch = useCallback(async () => {
     clearPolling();
 
@@ -226,6 +239,7 @@ export function useTalist(options: UseTalistOptions = {}): UseTalistReturn {
     error,
     progress,
     startSearch,
+    resumeSearch,
     cancelSearch,
     reset,
   };

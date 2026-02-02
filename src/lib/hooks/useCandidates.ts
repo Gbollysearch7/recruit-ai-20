@@ -44,7 +44,8 @@ export function useCandidates() {
 
       if (error) throw error;
       setCandidates(data || []);
-    } catch {
+    } catch (err) {
+      console.error('Failed to fetch candidates:', err);
       setCandidates([]);
     } finally {
       setIsLoading(false);
@@ -82,7 +83,8 @@ export function useCandidates() {
       // Update local state
       setCandidates(prev => [data, ...prev]);
       return data;
-    } catch {
+    } catch (err) {
+      console.error('Failed to save candidate:', err);
       return null;
     }
   }, [supabase, user]);
@@ -119,7 +121,8 @@ export function useCandidates() {
       // Update local state
       setCandidates(prev => [...(data || []), ...prev]);
       return data || [];
-    } catch {
+    } catch (err) {
+      console.error('Failed to save candidates in bulk:', err);
       return [];
     }
   }, [supabase, user]);
@@ -156,7 +159,8 @@ export function useCandidates() {
       // Update local state
       setCandidates(prev => prev.map(c => c.id === id ? data : c));
       return data;
-    } catch {
+    } catch (err) {
+      console.error('Failed to update candidate:', err);
       return null;
     }
   }, [supabase, user]);
@@ -177,7 +181,8 @@ export function useCandidates() {
       // Update local state
       setCandidates(prev => prev.filter(c => c.id !== id));
       return true;
-    } catch {
+    } catch (err) {
+      console.error('Failed to delete candidate:', err);
       return false;
     }
   }, [supabase, user]);
@@ -196,7 +201,8 @@ export function useCandidates() {
 
       if (error) throw error;
       return data;
-    } catch {
+    } catch (err) {
+      console.error('Failed to get candidate:', err);
       return null;
     }
   }, [supabase, user]);
@@ -215,7 +221,8 @@ export function useCandidates() {
 
       if (error) throw error;
       return data || [];
-    } catch {
+    } catch (err) {
+      console.error('Failed to search candidates:', err);
       return [];
     }
   }, [supabase, user, candidates]);
@@ -234,7 +241,8 @@ export function useCandidates() {
 
       if (error) throw error;
       return data || [];
-    } catch {
+    } catch (err) {
+      console.error('Failed to get candidate comments:', err);
       return [];
     }
   }, [supabase, user]);
@@ -256,7 +264,8 @@ export function useCandidates() {
 
       if (error) throw error;
       return data;
-    } catch {
+    } catch (err) {
+      console.error('Failed to add candidate comment:', err);
       return null;
     }
   }, [supabase, user]);
@@ -276,7 +285,8 @@ export function useCandidates() {
 
       if (error) throw error;
       return data;
-    } catch {
+    } catch (err) {
+      console.error('Failed to update candidate comment:', err);
       return null;
     }
   }, [supabase, user]);
@@ -294,7 +304,8 @@ export function useCandidates() {
 
       if (error) throw error;
       return true;
-    } catch {
+    } catch (err) {
+      console.error('Failed to delete candidate comment:', err);
       return false;
     }
   }, [supabase, user]);
@@ -317,7 +328,8 @@ export function useCandidates() {
       // Update local state
       setCandidates(prev => prev.map(c => c.id === id ? data : c));
       return data;
-    } catch {
+    } catch (err) {
+      console.error('Failed to update candidate stage:', err);
       return null;
     }
   }, [supabase, user]);

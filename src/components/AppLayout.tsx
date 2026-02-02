@@ -1,11 +1,13 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { ThemeToggle } from './ThemeToggle';
+import { KeyboardShortcutsDialog } from './KeyboardShortcutsDialog';
 import { useAuth } from '@/lib/hooks/useAuth';
 import { useToast } from './Toast';
+import { useKeyboardShortcuts, createCommonShortcuts } from '@/hooks/useKeyboardShortcuts';
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -15,25 +17,28 @@ const navigation = [
   { name: 'Dashboard', href: '/dashboard', icon: 'dashboard' },
   { name: 'Search', href: '/search', icon: 'search' },
   { name: 'Saved Searches', href: '/searches', icon: 'history' },
+  { name: 'My Lists', href: '/lists', icon: 'folder' },
+  { name: 'Settings', href: '/settings', icon: 'settings' },
 ];
 
 export function AppLayout({ children }: AppLayoutProps) {
   const pathname = usePathname();
+  const router = useRouter();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
-  const { user, profile, isLoading, isAuthenticated, isConfigured, signInWithGoogle, signOut } = useAuth();
+  const [showKeyboardHelp, setShowKeyboardHelp] = useState(false);
+  const { user, profile, isLoading, isAuthenticated, signOut } = useAuth();
   const { addToast } = useToast();
 
-  const handleSignIn = async () => {
-    if (!isConfigured) {
-      addToast('Authentication is not configured', 'error');
-      return;
-    }
-    try {
-      await signInWithGoogle();
-    } catch {
-      addToast('Failed to sign in. Please try again.', 'error');
-    }
+  // Global keyboard shortcuts
+  const shortcuts = createCommonShortcuts({
+    onNewSearch: () => router.push('/search'),
+    onShowHelp: () => setShowKeyboardHelp(true),
+  });
+  useKeyboardShortcuts({ shortcuts });
+
+  const handleSignIn = () => {
+    window.location.href = '/auth/login';
   };
 
   const handleSignOut = async () => {
@@ -70,7 +75,7 @@ export function AppLayout({ children }: AppLayoutProps) {
           <div className="flex items-center justify-between h-12 px-4 border-b border-[var(--border-light)]">
             <Link href="/" className="flex items-center gap-2">
               <span className="material-icons-outlined text-[var(--primary)] text-lg">filter_center_focus</span>
-              <span className="text-sm font-semibold text-[var(--text-primary)] tracking-tight">talist.ai</span>
+              <span className="text-sm font-semibold text-[var(--text-primary)] tracking-tight">Recruit AI</span>
             </Link>
             <button
               className="lg:hidden p-1 rounded text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-surface)] transition-colors"
@@ -286,6 +291,12 @@ export function AppLayout({ children }: AppLayoutProps) {
           </div>
         </main>
       </div>
+
+      {/* Global keyboard shortcuts dialog */}
+      <KeyboardShortcutsDialog
+        isOpen={showKeyboardHelp}
+        onClose={() => setShowKeyboardHelp(false)}
+      />
     </div>
   );
 }

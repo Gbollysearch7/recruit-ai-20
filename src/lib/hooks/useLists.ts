@@ -54,7 +54,8 @@ export function useLists() {
       }));
 
       setLists(listsWithCounts);
-    } catch {
+    } catch (err) {
+      console.error('Failed to fetch lists:', err);
       setLists([]);
     } finally {
       setIsLoading(false);
@@ -83,7 +84,8 @@ export function useLists() {
       // Update local state
       setLists(prev => [{ ...data, candidateCount: 0 }, ...prev]);
       return data;
-    } catch {
+    } catch (err) {
+      console.error('Failed to create list:', err);
       return null;
     }
   }, [supabase, user]);
@@ -106,7 +108,8 @@ export function useLists() {
       // Update local state
       setLists(prev => prev.map(l => l.id === id ? { ...l, ...data } : l));
       return data;
-    } catch {
+    } catch (err) {
+      console.error('Failed to update list:', err);
       return null;
     }
   }, [supabase, user]);
@@ -127,7 +130,8 @@ export function useLists() {
       // Update local state
       setLists(prev => prev.filter(l => l.id !== id));
       return true;
-    } catch {
+    } catch (err) {
+      console.error('Failed to delete list:', err);
       return false;
     }
   }, [supabase, user]);
@@ -161,7 +165,8 @@ export function useLists() {
         members: members || [],
         candidateCount: members?.length || 0,
       };
-    } catch {
+    } catch (err) {
+      console.error('Failed to get list with candidates:', err);
       return null;
     }
   }, [supabase, user]);
@@ -187,7 +192,8 @@ export function useLists() {
           : l
       ));
       return true;
-    } catch {
+    } catch (err) {
+      console.error('Failed to add candidate to list:', err);
       return false;
     }
   }, [supabase, user]);
@@ -212,7 +218,8 @@ export function useLists() {
           : l
       ));
       return true;
-    } catch {
+    } catch (err) {
+      console.error('Failed to remove candidate from list:', err);
       return false;
     }
   }, [supabase, user]);
@@ -236,7 +243,8 @@ export function useLists() {
       // Refresh lists to get accurate count
       await fetchLists();
       return true;
-    } catch {
+    } catch (err) {
+      console.error('Failed to add candidates to list:', err);
       return false;
     }
   }, [supabase, user, fetchLists]);
@@ -255,7 +263,8 @@ export function useLists() {
 
       if (error) return false;
       return !!data;
-    } catch {
+    } catch (err) {
+      console.error('Failed to check if candidate is in list:', err);
       return false;
     }
   }, [supabase]);
@@ -272,10 +281,101 @@ export function useLists() {
 
       if (error) throw error;
       return (data || []).map(m => m.list_id).filter((id): id is string => id !== null);
-    } catch {
+    } catch (err) {
+      console.error('Failed to get lists for candidate:', err);
       return [];
     }
   }, [supabase, user]);
+
+  // Share a list (generate public link)
+  const shareList = useCallback(async (id: string): Promise<string | null> => {
+    if (!supabase || !user) return null;
+
+    try {
+      const { data: shareIdData, error: shareIdError } = await supabase
+        .rpc('generate_share_id');
+
+      if (shareIdError) throw shareIdError;
+
+      const { data, error } = await supabase
+        .from('lists')
+        .update({ share_id: shareIdData, is_public: true })
+        .eq('id', id)
+        .eq('user_id', user.id)
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      setLists(prev => prev.map(l => l.id === id ? { ...l, ...data } : l));
+
+      const baseUrl = typeof window !== 'undefined'
+        ? window.location.origin
+        : process.env.NEXT_PUBLIC_APP_URL || '';
+      return `${baseUrl}/shared/list/${shareIdData}`;
+    } catch (err) {
+      console.error('Failed to share list:', err);
+      return null;
+    }
+  }, [supabase, user]);
+
+  // Unshare a list
+  const unshareList = useCallback(async (id: string): Promise<boolean> => {
+    if (!supabase || !user) return false;
+
+    try {
+      const { data, error } = await supabase
+        .from('lists')
+        .update({ share_id: null, is_public: false })
+        .eq('id', id)
+        .eq('user_id', user.id)
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      setLists(prev => prev.map(l => l.id === id ? { ...l, ...data } : l));
+      return true;
+    } catch (err) {
+      console.error('Failed to unshare list:', err);
+      return false;
+    }
+  }, [supabase, user]);
+
+  // Get a list by share ID (public access, no auth required)
+  const getListByShareId = useCallback(async (shareId: string): Promise<ListWithMembers | null> => {
+    if (!supabase) return null;
+
+    try {
+      const { data: list, error: listError } = await supabase
+        .from('lists')
+        .select('*')
+        .eq('share_id', shareId)
+        .eq('is_public', true)
+        .single();
+
+      if (listError) throw listError;
+
+      const { data: members, error: membersError } = await supabase
+        .from('list_members')
+        .select(`
+          *,
+          candidate:candidates(*)
+        `)
+        .eq('list_id', list.id);
+
+      if (membersError) throw membersError;
+
+      return {
+        ...list,
+        members: members || [],
+        candidateCount: members?.length || 0,
+      };
+    } catch (err) {
+      console.error('Failed to get list by share ID:', err);
+      return null;
+    }
+  }, [supabase]);
 
   // Fetch lists on mount and when user changes
   useEffect(() => {
@@ -300,5 +400,8 @@ export function useLists() {
     addCandidatesToList,
     isCandidateInList,
     getListsForCandidate,
+    shareList,
+    unshareList,
+    getListByShareId,
   };
 }

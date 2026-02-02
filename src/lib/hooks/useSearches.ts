@@ -46,7 +46,8 @@ export function useSearches() {
 
       if (error) throw error;
       setSearches(data || []);
-    } catch {
+    } catch (err) {
+      console.error('Failed to fetch searches:', err);
       setSearches([]);
     } finally {
       setIsLoading(false);
@@ -78,7 +79,8 @@ export function useSearches() {
       // Update local state
       setSearches(prev => [data, ...prev]);
       return data;
-    } catch {
+    } catch (err) {
+      console.error('Failed to create search:', err);
       return null;
     }
   }, [supabase, user]);
@@ -108,7 +110,8 @@ export function useSearches() {
       // Update local state
       setSearches(prev => prev.map(s => s.id === params.id ? data : s));
       return data;
-    } catch {
+    } catch (err) {
+      console.error('Failed to update search:', err);
       return null;
     }
   }, [supabase, user]);
@@ -129,25 +132,39 @@ export function useSearches() {
       // Update local state
       setSearches(prev => prev.filter(s => s.id !== id));
       return true;
-    } catch {
+    } catch (err) {
+      console.error('Failed to delete search:', err);
       return false;
     }
   }, [supabase, user]);
 
-  // Get a single search by ID
+  // Get a single search by ID (supports both internal id and exa_webset_id)
   const getSearch = useCallback(async (id: string): Promise<ExaSearch | null> => {
     if (!supabase) return null;
 
     try {
+      // First try by exa_webset_id (most common when coming from search URLs)
+      const { data: dataByWebsetId, error: websetError } = await supabase
+        .from('exa_searches')
+        .select('*')
+        .eq('exa_webset_id', id)
+        .maybeSingle();
+
+      if (!websetError && dataByWebsetId) {
+        return dataByWebsetId;
+      }
+
+      // Fall back to internal id
       const { data, error } = await supabase
         .from('exa_searches')
         .select('*')
         .eq('id', id)
-        .single();
+        .maybeSingle();
 
       if (error) throw error;
       return data;
-    } catch {
+    } catch (err) {
+      console.error('Failed to get search:', err);
       return null;
     }
   }, [supabase]);
@@ -166,7 +183,8 @@ export function useSearches() {
 
       if (error) throw error;
       return data;
-    } catch {
+    } catch (err) {
+      console.error('Failed to get search by share ID:', err);
       return null;
     }
   }, [supabase]);
@@ -200,7 +218,8 @@ export function useSearches() {
         ? window.location.origin
         : process.env.NEXT_PUBLIC_APP_URL || '';
       return `${baseUrl}/shared/${shareIdData}`;
-    } catch {
+    } catch (err) {
+      console.error('Failed to share search:', err);
       return null;
     }
   }, [supabase, user]);
@@ -223,7 +242,8 @@ export function useSearches() {
       // Update local state
       setSearches(prev => prev.map(s => s.id === id ? data : s));
       return true;
-    } catch {
+    } catch (err) {
+      console.error('Failed to unshare search:', err);
       return false;
     }
   }, [supabase, user]);

@@ -13,6 +13,7 @@ interface SearchesToolbarProps {
   onDelete?: () => void;
   onDeleteSearch?: () => void;
   onExport?: () => void;
+  onCompare?: () => void;
   isExporting?: boolean;
 }
 
@@ -27,6 +28,7 @@ export function SearchesToolbar({
   onDelete,
   onDeleteSearch,
   onExport,
+  onCompare,
   isExporting = false,
 }: SearchesToolbarProps) {
   return (
@@ -71,6 +73,15 @@ export function SearchesToolbar({
           <>
             <div className="w-px h-4 bg-[var(--border-light)]" />
             <span className="text-[var(--text-muted)]">{selectedCount} selected</span>
+            {onCompare && selectedCount >= 2 && selectedCount <= 3 && (
+              <button
+                onClick={onCompare}
+                className="flex items-center gap-1 text-[var(--primary)] hover:text-[var(--primary-hover)] transition-colors"
+              >
+                <span className="material-icons-outlined text-sm">compare_arrows</span>
+                Compare
+              </button>
+            )}
             <button
               onClick={onDelete}
               className="flex items-center gap-1 text-[var(--error)] hover:text-[var(--error-text)] transition-colors"

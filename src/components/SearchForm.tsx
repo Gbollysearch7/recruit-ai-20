@@ -1,8 +1,10 @@
 'use client';
 
-import { useState } from 'react';
-import { Search, Loader2, Plus, X, ChevronDown, ChevronUp, Sparkles, Settings2 } from 'lucide-react';
+import { useState, useEffect, useCallback } from 'react';
+import { Search, Loader2, Plus, X, ChevronDown, ChevronUp, Sparkles, Settings2, BookmarkPlus, FolderOpen } from 'lucide-react';
 import { CreateEnrichmentParameters } from '@/types/exa';
+import { TemplatePickerDialog, SaveTemplateDialog } from './TemplatePickerDialog';
+import type { SearchTemplate } from '@/lib/supabase';
 
 interface SearchFormProps {
   onSearch: (
@@ -12,6 +14,37 @@ interface SearchFormProps {
     enrichments: CreateEnrichmentParameters[]
   ) => void;
   isLoading: boolean;
+  initialQuery?: string;
+  showSaveTemplate?: boolean;
+}
+
+// Key for localStorage
+const SEARCH_STATE_KEY = 'talist_search_form_state';
+
+interface SavedSearchState {
+  query: string;
+  count: number;
+  criteria: string[];
+  showAdvanced: boolean;
+  savedAt: number;
+}
+
+// Load saved state from localStorage
+function loadSavedState(): SavedSearchState | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    const saved = localStorage.getItem(SEARCH_STATE_KEY);
+    if (saved) {
+      const state = JSON.parse(saved) as SavedSearchState;
+      // Only restore if saved within the last hour
+      if (Date.now() - state.savedAt < 60 * 60 * 1000) {
+        return state;
+      }
+    }
+  } catch {
+    // Ignore parse errors
+  }
+  return null;
 }
 
 const defaultEnrichments: CreateEnrichmentParameters[] = [
@@ -34,14 +67,63 @@ function parseCountFromQuery(query: string): number | null {
   return null;
 }
 
-export function SearchForm({ onSearch, isLoading }: SearchFormProps) {
-  const [query, setQuery] = useState('');
-  const [count, setCount] = useState(20);
+export function SearchForm({ onSearch, isLoading, initialQuery = '', showSaveTemplate = false }: SearchFormProps) {
+  // Initialize state from localStorage if available
+  const savedState = typeof window !== 'undefined' ? loadSavedState() : null;
+
+  const [query, setQuery] = useState(initialQuery || savedState?.query || '');
+  const [count, setCount] = useState(savedState?.count || 20);
   const [countAutoSet, setCountAutoSet] = useState(false);
-  const [criteria, setCriteria] = useState<string[]>([]);
+  const [criteria, setCriteria] = useState<string[]>(savedState?.criteria || []);
   const [newCriterion, setNewCriterion] = useState('');
   const [enrichments, setEnrichments] = useState<CreateEnrichmentParameters[]>(defaultEnrichments);
-  const [showAdvanced, setShowAdvanced] = useState(false);
+  const [showAdvanced, setShowAdvanced] = useState(savedState?.showAdvanced || false);
+  const [showTemplates, setShowTemplates] = useState(false);
+  const [showSaveTemplateDialog, setShowSaveTemplateDialog] = useState(false);
+
+  const handleSelectTemplate = (template: SearchTemplate) => {
+    setQuery(template.query || '');
+    if (template.count) setCount(template.count);
+    if (template.criteria && Array.isArray(template.criteria)) {
+      setCriteria(template.criteria as string[]);
+    }
+    if (template.enrichments && Array.isArray(template.enrichments)) {
+      setEnrichments(template.enrichments as unknown as CreateEnrichmentParameters[]);
+    }
+    setCountAutoSet(false);
+  };
+
+  // Save state to localStorage whenever it changes
+  const saveState = useCallback(() => {
+    if (typeof window === 'undefined') return;
+    const state: SavedSearchState = {
+      query,
+      count,
+      criteria,
+      showAdvanced,
+      savedAt: Date.now(),
+    };
+    localStorage.setItem(SEARCH_STATE_KEY, JSON.stringify(state));
+  }, [query, count, criteria, showAdvanced]);
+
+  // Save state on change
+  useEffect(() => {
+    saveState();
+  }, [saveState]);
+
+  // Clear saved state when search is submitted
+  const clearSavedState = useCallback(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem(SEARCH_STATE_KEY);
+    }
+  }, []);
+
+  // Update query when initialQuery prop changes
+  useEffect(() => {
+    if (initialQuery) {
+      setQuery(initialQuery);
+    }
+  }, [initialQuery]);
 
   // Auto-detect count from query
   const handleQueryChange = (newQuery: string) => {
@@ -64,6 +146,8 @@ export function SearchForm({ onSearch, isLoading }: SearchFormProps) {
         `MUST match the search query: "${query}". Their profile must clearly indicate relevant experience.`,
         'MUST be a professional with a verifiable work history. They should have a LinkedIn profile or professional online presence.'
       ];
+      // Clear saved state when search is submitted successfully
+      clearSavedState();
       onSearch(query.trim(), count, finalCriteria, enrichments);
     }
   };
@@ -158,6 +242,26 @@ export function SearchForm({ onSearch, isLoading }: SearchFormProps) {
             Advanced
             {showAdvanced ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
           </button>
+
+          <button
+            type="button"
+            onClick={() => setShowTemplates(true)}
+            className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-[var(--text-secondary)] hover:text-[var(--text-primary)] rounded-lg hover:bg-[var(--bg-surface)] transition-colors"
+          >
+            <FolderOpen className="h-4 w-4" />
+            Templates
+          </button>
+
+          {showSaveTemplate && query.trim() && (
+            <button
+              type="button"
+              onClick={() => setShowSaveTemplateDialog(true)}
+              className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-[var(--primary)] hover:text-[var(--primary-hover)] rounded-lg hover:bg-[var(--primary-light)] transition-colors"
+            >
+              <BookmarkPlus className="h-4 w-4" />
+              Save as Template
+            </button>
+          )}
         </div>
 
         {/* Advanced Options */}
@@ -282,6 +386,21 @@ export function SearchForm({ onSearch, isLoading }: SearchFormProps) {
           ))}
         </div>
       </div>
+
+      {/* Template Dialogs */}
+      <TemplatePickerDialog
+        isOpen={showTemplates}
+        onClose={() => setShowTemplates(false)}
+        onSelectTemplate={handleSelectTemplate}
+      />
+      <SaveTemplateDialog
+        isOpen={showSaveTemplateDialog}
+        onClose={() => setShowSaveTemplateDialog(false)}
+        query={query}
+        count={count}
+        criteria={criteria}
+        enrichments={enrichments.map(e => ({ description: e.description, format: e.format || 'text' }))}
+      />
     </div>
   );
 }

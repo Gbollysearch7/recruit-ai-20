@@ -2,6 +2,10 @@
 
 import { useState, useMemo } from 'react';
 import { WebsetItem, getPersonFromItem } from '@/types/exa';
+import { useCandidates } from '@/lib/hooks/useCandidates';
+import { useAuth } from '@/lib/hooks/useAuth';
+import { useToast } from './Toast';
+import { AddToListDialog } from './AddToListDialog';
 
 interface ResultsTableProps {
   items: WebsetItem[];
@@ -10,6 +14,7 @@ interface ResultsTableProps {
   onSelectionChange?: (selectedIds: Set<string>) => void;
   onRowClick?: (item: WebsetItem) => void;
   selectedRowId?: string | null;
+  searchId?: string;
 }
 
 type MatchStatus = 'Match' | 'Miss' | 'Unclear';
@@ -55,8 +60,17 @@ function getReferenceCount(item: WebsetItem, criterionIndex: number) {
 // Criteria colors matching the design
 const criteriaColors = ['bg-purple-500', 'bg-orange-500', 'bg-blue-500', 'bg-slate-300'];
 
-export function ResultsTable({ items, criteria, isLoading, onSelectionChange, onRowClick, selectedRowId }: ResultsTableProps) {
+export function ResultsTable({ items, criteria, isLoading, onSelectionChange, onRowClick, selectedRowId, searchId }: ResultsTableProps) {
   const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set());
+  const [savingIds, setSavingIds] = useState<Set<string>>(new Set());
+  const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
+  const [addToListItem, setAddToListItem] = useState<{ id: string; name: string } | null>(null);
+  const [bulkAddToList, setBulkAddToList] = useState(false);
+
+  const { saveCandidate, saveCandidates } = useCandidates();
+  const [isBulkSaving, setIsBulkSaving] = useState(false);
+  const { isAuthenticated } = useAuth();
+  const { addToast } = useToast();
 
   const updateSelection = (newSelection: Set<string>) => {
     setSelectedRows(newSelection);
@@ -78,6 +92,106 @@ export function ResultsTable({ items, criteria, isLoading, onSelectionChange, on
       updateSelection(new Set());
     } else {
       updateSelection(new Set(items.map(item => item.id)));
+    }
+  };
+
+  const handleSaveCandidate = async (item: WebsetItem, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!isAuthenticated) {
+      addToast('Please sign in to save candidates', 'error');
+      return;
+    }
+    if (savingIds.has(item.id) || savedIds.has(item.id)) return;
+
+    setSavingIds(prev => new Set([...prev, item.id]));
+    try {
+      const person = getPersonFromItem(item);
+      const saved = await saveCandidate({
+        name: person?.name || 'Unknown',
+        company: person?.company?.name,
+        title: person?.position,
+        linkedin: item.properties.url,
+        avatar: person?.pictureUrl,
+        source: `exa_search:${searchId || 'unknown'}`,
+      });
+      if (saved) {
+        setSavedIds(prev => new Set([...prev, item.id]));
+        addToast(`Saved ${person?.name || 'candidate'}`, 'success');
+      } else {
+        addToast('Failed to save candidate', 'error');
+      }
+    } finally {
+      setSavingIds(prev => {
+        const next = new Set(prev);
+        next.delete(item.id);
+        return next;
+      });
+    }
+  };
+
+  const handleAddToList = (item: WebsetItem, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!isAuthenticated) {
+      addToast('Please sign in to add to list', 'error');
+      return;
+    }
+    const person = getPersonFromItem(item);
+    setAddToListItem({ id: item.id, name: person?.name || 'Unknown' });
+  };
+
+  const handleBulkAddToList = () => {
+    if (!isAuthenticated) {
+      addToast('Please sign in to add to list', 'error');
+      return;
+    }
+    if (selectedRows.size === 0) {
+      addToast('Select candidates first', 'error');
+      return;
+    }
+    setBulkAddToList(true);
+  };
+
+  const handleBulkSave = async () => {
+    if (!isAuthenticated) {
+      addToast('Please sign in to save candidates', 'error');
+      return;
+    }
+    if (selectedRows.size === 0) {
+      addToast('Select candidates first', 'error');
+      return;
+    }
+
+    setIsBulkSaving(true);
+    try {
+      const selectedItems = items.filter(item => selectedRows.has(item.id) && !savedIds.has(item.id));
+      if (selectedItems.length === 0) {
+        addToast('All selected candidates are already saved', 'info');
+        return;
+      }
+
+      const candidateParams = selectedItems.map(item => {
+        const person = getPersonFromItem(item);
+        return {
+          name: person?.name || 'Unknown',
+          company: person?.company?.name,
+          title: person?.position,
+          linkedin: item.properties.url,
+          avatar: person?.pictureUrl,
+          source: `exa_search:${searchId || 'unknown'}`,
+        };
+      });
+
+      const saved = await saveCandidates(candidateParams);
+      if (saved.length > 0) {
+        const newSavedIds = new Set(savedIds);
+        selectedItems.forEach(item => newSavedIds.add(item.id));
+        setSavedIds(newSavedIds);
+        addToast(`Saved ${saved.length} candidate${saved.length > 1 ? 's' : ''}`, 'success');
+      } else {
+        addToast('Failed to save candidates', 'error');
+      }
+    } finally {
+      setIsBulkSaving(false);
     }
   };
 
@@ -163,6 +277,32 @@ export function ResultsTable({ items, criteria, isLoading, onSelectionChange, on
                 </div>
               </th>
             ))}
+            <th className="w-24 text-center">
+              <div className="flex items-center justify-center gap-1">
+                Actions
+                {selectedRows.size > 0 && (
+                  <>
+                    <button
+                      onClick={handleBulkSave}
+                      disabled={isBulkSaving}
+                      className="ml-1 p-0.5 rounded hover:bg-[var(--success-bg)] text-[var(--success)]"
+                      title={`Save ${selectedRows.size} candidate${selectedRows.size > 1 ? 's' : ''}`}
+                    >
+                      <span className={`material-icons-outlined text-sm ${isBulkSaving ? 'animate-spin' : ''}`}>
+                        {isBulkSaving ? 'refresh' : 'save'}
+                      </span>
+                    </button>
+                    <button
+                      onClick={handleBulkAddToList}
+                      className="p-0.5 rounded hover:bg-[var(--bg-surface)] text-[var(--primary)]"
+                      title={`Add ${selectedRows.size} to list`}
+                    >
+                      <span className="material-icons-outlined text-sm">playlist_add</span>
+                    </button>
+                  </>
+                )}
+              </div>
+            </th>
           </tr>
         </thead>
         <tbody>
@@ -236,11 +376,56 @@ export function ResultsTable({ items, criteria, isLoading, onSelectionChange, on
                     </td>
                   );
                 })}
+                <td className="text-center">
+                  <div className="flex items-center justify-center gap-1">
+                    <button
+                      onClick={(e) => handleSaveCandidate(item, e)}
+                      disabled={savingIds.has(item.id) || savedIds.has(item.id)}
+                      className={`p-1 rounded transition-colors ${
+                        savedIds.has(item.id)
+                          ? 'text-[var(--success)] cursor-default'
+                          : 'text-[var(--text-tertiary)] hover:text-[var(--primary)] hover:bg-[var(--bg-surface)]'
+                      }`}
+                      title={savedIds.has(item.id) ? 'Saved' : 'Save candidate'}
+                    >
+                      <span className={`material-icons-outlined text-sm ${savingIds.has(item.id) ? 'animate-spin' : ''}`}>
+                        {savingIds.has(item.id) ? 'refresh' : savedIds.has(item.id) ? 'check_circle' : 'bookmark_border'}
+                      </span>
+                    </button>
+                    <button
+                      onClick={(e) => handleAddToList(item, e)}
+                      className="p-1 rounded text-[var(--text-tertiary)] hover:text-[var(--primary)] hover:bg-[var(--bg-surface)] transition-colors"
+                      title="Add to list"
+                    >
+                      <span className="material-icons-outlined text-sm">playlist_add</span>
+                    </button>
+                  </div>
+                </td>
               </tr>
             );
           })}
         </tbody>
       </table>
+
+      {/* Add to List Dialog - Single */}
+      {addToListItem && (
+        <AddToListDialog
+          isOpen={!!addToListItem}
+          onClose={() => setAddToListItem(null)}
+          candidateId={addToListItem.id}
+          candidateName={addToListItem.name}
+        />
+      )}
+
+      {/* Add to List Dialog - Bulk */}
+      {bulkAddToList && (
+        <AddToListDialog
+          isOpen={bulkAddToList}
+          onClose={() => setBulkAddToList(false)}
+          candidateIds={Array.from(selectedRows)}
+          onSuccess={() => updateSelection(new Set())}
+        />
+      )}
     </div>
   );
 }

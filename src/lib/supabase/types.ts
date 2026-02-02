@@ -385,8 +385,10 @@ export type Database = {
           description: string | null
           icon: string | null
           id: string
+          is_public: boolean | null
           is_smart: boolean | null
           name: string
+          share_id: string | null
           smart_filters: Json | null
           updated_at: string | null
           user_id: string | null
@@ -397,8 +399,10 @@ export type Database = {
           description?: string | null
           icon?: string | null
           id?: string
+          is_public?: boolean | null
           is_smart?: boolean | null
           name: string
+          share_id?: string | null
           smart_filters?: Json | null
           updated_at?: string | null
           user_id?: string | null
@@ -409,8 +413,10 @@ export type Database = {
           description?: string | null
           icon?: string | null
           id?: string
+          is_public?: boolean | null
           is_smart?: boolean | null
           name?: string
+          share_id?: string | null
           smart_filters?: Json | null
           updated_at?: string | null
           user_id?: string | null
