@@ -122,9 +122,11 @@ export default function SearchDetailPage() {
   const fetchSearchData = useCallback(async (searchId: string) => {
     setIsLoading(true);
     try {
-      // First, try to load from Supabase (for persisted results)
+      // First, try to load from Supabase (for persisted/completed results)
       const savedSearch = await getSearch(searchId);
-      if (savedSearch && savedSearch.results && Array.isArray(savedSearch.results)) {
+
+      // If we have a completed search with results in Supabase, use that
+      if (savedSearch && savedSearch.status === 'completed' && savedSearch.results && Array.isArray(savedSearch.results) && savedSearch.results.length > 0) {
         // Use saved results from Supabase
         setSearchQuery(savedSearch.query);
         if (savedSearch.criteria && Array.isArray(savedSearch.criteria)) {
@@ -137,7 +139,7 @@ export default function SearchDetailPage() {
         return null;
       }
 
-      // Fallback: Fetch webset details from API
+      // For running searches or no saved results, fetch from Exa API
       const searchRes = await fetch(`/api/websets/${searchId}`);
       if (!searchRes.ok) {
         throw new Error('Search not found');
@@ -169,7 +171,7 @@ export default function SearchDetailPage() {
       const itemsRes = await fetch(`/api/websets/${searchId}/items?limit=100`);
       if (itemsRes.ok) {
         const data = await itemsRes.json();
-        if (data.data && data.data.length > 0) {
+        if (data.data) {
           setItems(data.data);
           setFilteredItems(data.data);
         }
@@ -472,6 +474,19 @@ const pollResults = async (websetId) => {
 
         {/* Main Area */}
         <main className="flex-1 flex flex-col bg-[var(--bg-primary)] min-w-0">
+          {/* Search In Progress Banner */}
+          {isPolling && (
+            <div className="px-4 py-2 bg-[var(--primary-light)] border-b border-[var(--primary)]/20 flex items-center gap-3">
+              <div className="flex items-center gap-2">
+                <span className="material-icons-outlined text-sm text-[var(--primary)] animate-spin">refresh</span>
+                <span className="text-xs font-medium text-[var(--primary)]">Search in progress</span>
+              </div>
+              <span className="text-xs text-[var(--primary)]/70">
+                {items.length > 0 ? `${items.length} candidates found so far...` : 'Finding candidates...'}
+              </span>
+            </div>
+          )}
+
           {/* Toolbar */}
           <SearchesToolbar
             selectedCount={selectedIds.size}

@@ -54,11 +54,7 @@ export default function SearchPage() {
         logSearchCompleted(currentQueryRef.current, finalItems.length);
       }
 
-      // Redirect to search detail page
-      if (completedWebset?.id) {
-        addToast(`Found ${finalItems.length} candidates!`, 'success');
-        router.push(`/searches/${completedWebset.id}`);
-      }
+      // Note: No redirect here - user is already on the detail page
     },
     onError: async (err) => {
       // Update search status to failed
@@ -76,6 +72,14 @@ export default function SearchPage() {
       }
     },
   });
+
+  // Redirect to search detail page immediately when webset is created
+  useEffect(() => {
+    if (webset?.id && isSearching) {
+      // Immediately redirect to the search detail page
+      router.push(`/searches/${webset.id}`);
+    }
+  }, [webset?.id, isSearching, router]);
 
   // Save search to Supabase when webset is created
   useEffect(() => {
