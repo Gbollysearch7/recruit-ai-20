@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { getSupabase, type Activity } from '@/lib/supabase';
 import { useAuth } from '@/lib/hooks/useAuth';
 
@@ -10,6 +10,11 @@ interface ActivityFeedProps {
   searchId?: string;
   listId?: string;
   showHeader?: boolean;
+}
+
+// Create a stable key for filter combination to track fetches
+function getFilterKey(candidateId?: string, searchId?: string, listId?: string): string {
+  return `${candidateId || ''}-${searchId || ''}-${listId || ''}`;
 }
 
 const activityIcons: Record<string, string> = {
@@ -46,9 +51,14 @@ export function ActivityFeed({ limit = 10, candidateId, searchId, listId, showHe
   const [isLoading, setIsLoading] = useState(true);
   const { user, isConfigured } = useAuth();
   const supabase = getSupabase();
+  const userId = user?.id;
+  const hasFetched = useRef<string | null>(null);
+
+  // Create a stable key for this filter combination
+  const filterKey = getFilterKey(candidateId, searchId, listId);
 
   const fetchActivities = useCallback(async () => {
-    if (!supabase || !user) {
+    if (!supabase || !userId) {
       setActivities([]);
       setIsLoading(false);
       return;
@@ -59,7 +69,7 @@ export function ActivityFeed({ limit = 10, candidateId, searchId, listId, showHe
       let query = supabase
         .from('activity')
         .select('*')
-        .eq('user_id', user.id)
+        .eq('user_id', userId)
         .order('created_at', { ascending: false })
         .limit(limit);
 
@@ -81,16 +91,24 @@ export function ActivityFeed({ limit = 10, candidateId, searchId, listId, showHe
     } finally {
       setIsLoading(false);
     }
-  }, [supabase, user, limit, candidateId, searchId, listId]);
+  }, [supabase, userId, limit, candidateId, searchId, listId]);
 
   useEffect(() => {
-    if (isConfigured && user) {
-      fetchActivities();
+    // Create a unique key for this user + filter combination
+    const currentKey = `${userId}-${filterKey}`;
+
+    if (isConfigured && userId) {
+      // Only fetch if we haven't fetched for this exact combination
+      if (hasFetched.current !== currentKey) {
+        hasFetched.current = currentKey;
+        fetchActivities();
+      }
     } else {
+      hasFetched.current = null;
       setActivities([]);
       setIsLoading(false);
     }
-  }, [isConfigured, user, fetchActivities]);
+  }, [isConfigured, userId, filterKey, fetchActivities]);
 
   const formatTime = (dateString: string | null) => {
     if (!dateString) return '';

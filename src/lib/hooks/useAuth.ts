@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useEffect, useState, useCallback } from 'react';
+import { createContext, useContext, useEffect, useState, useCallback, useMemo } from 'react';
 import { User, Session, AuthChangeEvent } from '@supabase/supabase-js';
 import { getSupabase, isSupabaseConfigured, type Profile } from '@/lib/supabase';
 
@@ -271,7 +271,9 @@ export function useAuthState(): AuthContextType {
     setSession(null);
   }, [supabase]);
 
-  return {
+  // Memoize the context value to prevent unnecessary re-renders of consumers
+  // Only create a new object when actual values change
+  const contextValue = useMemo(() => ({
     user,
     profile,
     session,
@@ -286,5 +288,21 @@ export function useAuthState(): AuthContextType {
     signOut,
     refreshProfile,
     updateProfile,
-  };
+  }), [
+    user,
+    profile,
+    session,
+    isLoading,
+    isConfigured,
+    signInWithGoogle,
+    signInWithEmail,
+    signUpWithEmail,
+    resetPassword,
+    updatePassword,
+    signOut,
+    refreshProfile,
+    updateProfile,
+  ]);
+
+  return contextValue;
 }
