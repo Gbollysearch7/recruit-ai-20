@@ -26,6 +26,7 @@ import { SearchDetailSkeleton } from '@/components/Skeleton';
 import { KeyboardShortcutsDialog } from '@/components/KeyboardShortcutsDialog';
 import { useKeyboardShortcuts, createCommonShortcuts } from '@/hooks/useKeyboardShortcuts';
 import { CandidateCompareDialog } from '@/components/CandidateCompareDialog';
+import { ExcludePeopleModal } from '@/components/ExcludePeopleModal';
 
 const availableEnrichmentOptions = [
   { id: 'email', label: 'Email', description: 'Work or personal email address' },
@@ -90,6 +91,11 @@ export default function SearchDetailPage() {
   const [showExportModal, setShowExportModal] = useState(false);
   const [showKeyboardHelp, setShowKeyboardHelp] = useState(false);
   const [showCompareDialog, setShowCompareDialog] = useState(false);
+  const [showExcludePeopleModal, setShowExcludePeopleModal] = useState(false);
+
+  // Exclude people state
+  const [excludedSearchIds, setExcludedSearchIds] = useState<Set<string>>(new Set());
+  const [excludedItemIds, setExcludedItemIds] = useState<Set<string>>(new Set());
 
   // Keyboard shortcuts
   const shortcuts = createCommonShortcuts({
@@ -500,6 +506,8 @@ const pollResults = async (websetId) => {
             onDeleteSearch={() => setShowDeleteSearchModal(true)}
             onExport={handleExport}
             onCompare={() => setShowCompareDialog(true)}
+            onExcludePeople={() => setShowExcludePeopleModal(true)}
+            excludedCount={excludedItemIds.size}
             isExporting={isExporting}
           />
 
@@ -512,6 +520,7 @@ const pollResults = async (websetId) => {
             onRowClick={(item) => setSelectedItem(item)}
             selectedRowId={selectedItem?.id}
             searchId={params.id as string}
+            excludedItemIds={excludedItemIds}
           />
 
           {/* Footer */}
@@ -662,6 +671,22 @@ const pollResults = async (websetId) => {
         onClose={() => setShowCompareDialog(false)}
         items={filteredItems.filter(item => selectedIds.has(item.id))}
         criteria={criteria}
+      />
+
+      <ExcludePeopleModal
+        isOpen={showExcludePeopleModal}
+        onClose={() => setShowExcludePeopleModal(false)}
+        currentSearchId={params.id as string}
+        onApply={(searchIds, itemIds) => {
+          setExcludedSearchIds(searchIds);
+          setExcludedItemIds(itemIds);
+          if (itemIds.size > 0) {
+            addToast(`Excluding ${itemIds.size} people from results`, 'success');
+          } else {
+            addToast('Exclusions cleared', 'info');
+          }
+        }}
+        initialExcludedSearchIds={excludedSearchIds}
       />
     </div>
   );

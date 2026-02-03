@@ -14,6 +14,8 @@ interface SearchesToolbarProps {
   onDeleteSearch?: () => void;
   onExport?: () => void;
   onCompare?: () => void;
+  onExcludePeople?: () => void;
+  excludedCount?: number;
   isExporting?: boolean;
 }
 
@@ -29,6 +31,8 @@ export function SearchesToolbar({
   onDeleteSearch,
   onExport,
   onCompare,
+  onExcludePeople,
+  excludedCount = 0,
   isExporting = false,
 }: SearchesToolbarProps) {
   return (
@@ -68,6 +72,24 @@ export function SearchesToolbar({
           </span>
           {isExporting ? 'Exporting...' : 'Export'}
         </button>
+        {onExcludePeople && (
+          <button
+            onClick={onExcludePeople}
+            className={`flex items-center gap-1 transition-colors ${
+              excludedCount > 0
+                ? 'text-[var(--primary)]'
+                : 'text-[var(--text-secondary)] hover:text-[var(--primary)]'
+            }`}
+          >
+            <span className="material-icons-outlined text-sm">person_off</span>
+            Exclude People
+            {excludedCount > 0 && (
+              <span className="ml-0.5 px-1.5 py-0.5 text-[10px] font-medium bg-[var(--primary)] text-white rounded-full">
+                {excludedCount}
+              </span>
+            )}
+          </button>
+        )}
 
         {selectedCount > 0 && (
           <>

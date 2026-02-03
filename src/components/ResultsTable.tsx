@@ -15,6 +15,7 @@ interface ResultsTableProps {
   onRowClick?: (item: WebsetItem) => void;
   selectedRowId?: string | null;
   searchId?: string;
+  excludedItemIds?: Set<string>; // Items to hide (from excluded websets)
 }
 
 type MatchStatus = 'Match' | 'Miss' | 'Unclear';
@@ -60,7 +61,7 @@ function getReferenceCount(item: WebsetItem, criterionIndex: number) {
 // Criteria colors matching the design
 const criteriaColors = ['bg-purple-500', 'bg-orange-500', 'bg-blue-500', 'bg-slate-300'];
 
-export function ResultsTable({ items, criteria, isLoading, onSelectionChange, onRowClick, selectedRowId, searchId }: ResultsTableProps) {
+export function ResultsTable({ items, criteria, isLoading, onSelectionChange, onRowClick, selectedRowId, searchId, excludedItemIds }: ResultsTableProps) {
   const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set());
   const [savingIds, setSavingIds] = useState<Set<string>>(new Set());
   const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
@@ -69,14 +70,41 @@ export function ResultsTable({ items, criteria, isLoading, onSelectionChange, on
 
   const { saveCandidate, saveCandidates, savedExaItemIds } = useCandidates();
 
-  // Filter out candidates that were already saved in previous searches
-  const { filteredItems, excludedCount } = useMemo(() => {
-    const filtered = items.filter(item => !savedExaItemIds.has(item.id));
+  // Filter out candidates that were already saved OR excluded from selected websets
+  const { filteredItems, savedExcludedCount, websetExcludedCount } = useMemo(() => {
+    let filtered = items;
+    let savedCount = 0;
+    let websetCount = 0;
+
+    // First filter out already saved candidates
+    filtered = filtered.filter(item => {
+      if (savedExaItemIds.has(item.id)) {
+        savedCount++;
+        return false;
+      }
+      return true;
+    });
+
+    // Then filter out candidates from excluded websets
+    if (excludedItemIds && excludedItemIds.size > 0) {
+      filtered = filtered.filter(item => {
+        if (excludedItemIds.has(item.id)) {
+          websetCount++;
+          return false;
+        }
+        return true;
+      });
+    }
+
     return {
       filteredItems: filtered,
-      excludedCount: items.length - filtered.length,
+      savedExcludedCount: savedCount,
+      websetExcludedCount: websetCount,
     };
-  }, [items, savedExaItemIds]);
+  }, [items, savedExaItemIds, excludedItemIds]);
+
+  // Total excluded count for display
+  const excludedCount = savedExcludedCount + websetExcludedCount;
   const [isBulkSaving, setIsBulkSaving] = useState(false);
   const { isAuthenticated } = useAuth();
   const { addToast } = useToast();
@@ -245,14 +273,18 @@ export function ResultsTable({ items, criteria, isLoading, onSelectionChange, on
     );
   }
 
-  // All results were already saved
+  // All results were filtered out
   if (filteredItems.length === 0 && excludedCount > 0) {
     return (
       <div className="flex-1 bg-white dark:bg-black/20 flex items-center justify-center">
         <div className="text-center text-[var(--text-tertiary)]">
-          <span className="material-icons-outlined text-3xl text-[var(--success)] mb-2 block">check_circle</span>
-          <p className="text-sm font-medium text-[var(--text-primary)]">All candidates already saved</p>
-          <p className="text-xs mt-1">{excludedCount} candidate{excludedCount > 1 ? 's' : ''} from this search {excludedCount > 1 ? 'are' : 'is'} already in your database</p>
+          <span className="material-icons-outlined text-3xl text-[var(--primary)] mb-2 block">filter_alt</span>
+          <p className="text-sm font-medium text-[var(--text-primary)]">All candidates filtered out</p>
+          <p className="text-xs mt-1 max-w-xs">
+            {savedExcludedCount > 0 && `${savedExcludedCount} already saved`}
+            {savedExcludedCount > 0 && websetExcludedCount > 0 && ', '}
+            {websetExcludedCount > 0 && `${websetExcludedCount} from excluded searches`}
+          </p>
         </div>
       </div>
     );
@@ -262,10 +294,16 @@ export function ResultsTable({ items, criteria, isLoading, onSelectionChange, on
     <div className="flex-1 bg-white dark:bg-black/20 overflow-auto">
       {/* Show excluded count banner if any candidates were filtered */}
       {excludedCount > 0 && (
-        <div className="px-3 py-1.5 bg-[var(--success-bg)] border-b border-[var(--success)]/20 flex items-center gap-2">
-          <span className="material-icons-outlined text-sm text-[var(--success)]">filter_list</span>
-          <span className="text-xs text-[var(--success-text)]">
-            {excludedCount} previously saved candidate{excludedCount > 1 ? 's' : ''} excluded
+        <div className="px-3 py-1.5 bg-[var(--primary-light)] border-b border-[var(--primary)]/20 flex items-center gap-2">
+          <span className="material-icons-outlined text-sm text-[var(--primary)]">filter_alt</span>
+          <span className="text-xs text-[var(--primary)]">
+            {excludedCount} candidate{excludedCount > 1 ? 's' : ''} excluded
+            {savedExcludedCount > 0 && websetExcludedCount > 0
+              ? ` (${savedExcludedCount} saved, ${websetExcludedCount} from excluded searches)`
+              : savedExcludedCount > 0
+                ? ' (already saved)'
+                : ' (from excluded searches)'
+            }
           </span>
         </div>
       )}
