@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useEffect, useRef } from 'react';
+import { useState, useCallback, useEffect, useRef, useMemo } from 'react';
 import { getSupabase, type Candidate, type CandidateComment } from '@/lib/supabase';
 import { useAuth } from './useAuth';
 
@@ -18,6 +18,8 @@ interface SaveCandidateParams {
   matchScore?: number;
   source?: string;
   tags?: string[];
+  exaItemId?: string;  // Unique ID from Exa search results for deduplication
+  searchId?: string;   // Link to the search that found this candidate
 }
 
 export function useCandidates() {
@@ -76,6 +78,8 @@ export function useCandidates() {
           match_score: params.matchScore,
           source: params.source || 'exa_search',
           tags: params.tags || [],
+          exa_item_id: params.exaItemId,
+          search_id: params.searchId,
         })
         .select()
         .single();
@@ -111,6 +115,8 @@ export function useCandidates() {
         match_score: params.matchScore,
         source: params.source || 'exa_search',
         tags: params.tags || [],
+        exa_item_id: params.exaItemId,
+        search_id: params.searchId,
       }));
 
       const { data, error } = await supabase
@@ -351,6 +357,22 @@ export function useCandidates() {
     }
   }, [isConfigured, userId, fetchCandidates]);
 
+  // Memoized set of all saved exa_item_ids for quick deduplication lookup
+  const savedExaItemIds = useMemo(() => {
+    const ids = new Set<string>();
+    candidates.forEach(c => {
+      if (c.exa_item_id) {
+        ids.add(c.exa_item_id);
+      }
+    });
+    return ids;
+  }, [candidates]);
+
+  // Check if an exa_item_id is already saved
+  const isExaItemSaved = useCallback((exaItemId: string): boolean => {
+    return savedExaItemIds.has(exaItemId);
+  }, [savedExaItemIds]);
+
   return {
     candidates,
     isLoading,
@@ -366,5 +388,7 @@ export function useCandidates() {
     updateCandidateComment,
     deleteCandidateComment,
     updateCandidateStage,
+    savedExaItemIds,     // Set of all saved exa_item_ids
+    isExaItemSaved,      // Quick lookup function
   };
 }

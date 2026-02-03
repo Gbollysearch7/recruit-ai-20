@@ -67,7 +67,16 @@ export function ResultsTable({ items, criteria, isLoading, onSelectionChange, on
   const [addToListItem, setAddToListItem] = useState<{ id: string; name: string } | null>(null);
   const [bulkAddToList, setBulkAddToList] = useState(false);
 
-  const { saveCandidate, saveCandidates } = useCandidates();
+  const { saveCandidate, saveCandidates, savedExaItemIds } = useCandidates();
+
+  // Filter out candidates that were already saved in previous searches
+  const { filteredItems, excludedCount } = useMemo(() => {
+    const filtered = items.filter(item => !savedExaItemIds.has(item.id));
+    return {
+      filteredItems: filtered,
+      excludedCount: items.length - filtered.length,
+    };
+  }, [items, savedExaItemIds]);
   const [isBulkSaving, setIsBulkSaving] = useState(false);
   const { isAuthenticated } = useAuth();
   const { addToast } = useToast();
@@ -88,10 +97,10 @@ export function ResultsTable({ items, criteria, isLoading, onSelectionChange, on
   };
 
   const toggleAll = () => {
-    if (selectedRows.size === items.length) {
+    if (selectedRows.size === filteredItems.length) {
       updateSelection(new Set());
     } else {
-      updateSelection(new Set(items.map(item => item.id)));
+      updateSelection(new Set(filteredItems.map(item => item.id)));
     }
   };
 
@@ -113,6 +122,8 @@ export function ResultsTable({ items, criteria, isLoading, onSelectionChange, on
         linkedin: item.properties.url,
         avatar: person?.pictureUrl,
         source: `exa_search:${searchId || 'unknown'}`,
+        exaItemId: item.id,       // Store the Exa item ID for deduplication
+        searchId: searchId,       // Link to the search
       });
       if (saved) {
         setSavedIds(prev => new Set([...prev, item.id]));
@@ -163,7 +174,7 @@ export function ResultsTable({ items, criteria, isLoading, onSelectionChange, on
 
     setIsBulkSaving(true);
     try {
-      const selectedItems = items.filter(item => selectedRows.has(item.id) && !savedIds.has(item.id));
+      const selectedItems = filteredItems.filter(item => selectedRows.has(item.id) && !savedIds.has(item.id));
       if (selectedItems.length === 0) {
         addToast('All selected candidates are already saved', 'info');
         return;
@@ -178,6 +189,8 @@ export function ResultsTable({ items, criteria, isLoading, onSelectionChange, on
           linkedin: item.properties.url,
           avatar: person?.pictureUrl,
           source: `exa_search:${searchId || 'unknown'}`,
+          exaItemId: item.id,       // Store the Exa item ID for deduplication
+          searchId: searchId,       // Link to the search
         };
       });
 
@@ -232,15 +245,37 @@ export function ResultsTable({ items, criteria, isLoading, onSelectionChange, on
     );
   }
 
+  // All results were already saved
+  if (filteredItems.length === 0 && excludedCount > 0) {
+    return (
+      <div className="flex-1 bg-white dark:bg-black/20 flex items-center justify-center">
+        <div className="text-center text-[var(--text-tertiary)]">
+          <span className="material-icons-outlined text-3xl text-[var(--success)] mb-2 block">check_circle</span>
+          <p className="text-sm font-medium text-[var(--text-primary)]">All candidates already saved</p>
+          <p className="text-xs mt-1">{excludedCount} candidate{excludedCount > 1 ? 's' : ''} from this search {excludedCount > 1 ? 'are' : 'is'} already in your database</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex-1 bg-white dark:bg-black/20 overflow-auto">
+      {/* Show excluded count banner if any candidates were filtered */}
+      {excludedCount > 0 && (
+        <div className="px-3 py-1.5 bg-[var(--success-bg)] border-b border-[var(--success)]/20 flex items-center gap-2">
+          <span className="material-icons-outlined text-sm text-[var(--success)]">filter_list</span>
+          <span className="text-xs text-[var(--success-text)]">
+            {excludedCount} previously saved candidate{excludedCount > 1 ? 's' : ''} excluded
+          </span>
+        </div>
+      )}
       <table className="dense-table">
         <thead>
           <tr>
             <th className="w-10 text-center">
               <input
                 type="checkbox"
-                checked={selectedRows.size === items.length && items.length > 0}
+                checked={selectedRows.size === filteredItems.length && filteredItems.length > 0}
                 onChange={toggleAll}
               />
             </th>
@@ -306,7 +341,7 @@ export function ResultsTable({ items, criteria, isLoading, onSelectionChange, on
           </tr>
         </thead>
         <tbody>
-          {items.map((item, index) => {
+          {filteredItems.map((item, index) => {
             const person = getPersonFromItem(item);
             const isSelected = selectedRows.has(item.id);
             const profileUrl = item.properties.url;
