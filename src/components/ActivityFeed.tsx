@@ -57,7 +57,7 @@ export function ActivityFeed({ limit = 10, candidateId, searchId, listId, showHe
     setIsLoading(true);
     try {
       let query = supabase
-        .from('activities')
+        .from('activity')
         .select('*')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false })
@@ -197,8 +197,9 @@ export function ActivityFeed({ limit = 10, candidateId, searchId, listId, showHe
 
       <div className="space-y-1">
         {activities.map((activity, index) => {
-          const icon = activityIcons[activity.activity_type] || activityIcons.default;
-          const color = activityColors[activity.activity_type] || activityColors.default;
+          const activityType = activity.activity_type || 'default';
+          const icon = activityIcons[activityType] || activityIcons.default;
+          const color = activityColors[activityType] || activityColors.default;
 
           return (
             <div

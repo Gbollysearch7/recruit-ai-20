@@ -40,7 +40,7 @@ export function useLists() {
         .from('lists')
         .select(`
           *,
-          list_members(count)
+          list_candidates(count)
         `)
         .eq('user_id', user.id)
         .order('created_at', { ascending: false });
@@ -50,7 +50,7 @@ export function useLists() {
       // Transform the data to include candidate count
       const listsWithCounts = (data || []).map(list => ({
         ...list,
-        candidateCount: list.list_members?.[0]?.count || 0,
+        candidateCount: (list.list_candidates as { count: number }[] | null)?.[0]?.count || 0,
       }));
 
       setLists(listsWithCounts);
@@ -151,7 +151,7 @@ export function useLists() {
       if (listError) throw listError;
 
       const { data: members, error: membersError } = await supabase
-        .from('list_members')
+        .from('list_candidates')
         .select(`
           *,
           candidate:candidates(*)
@@ -177,7 +177,7 @@ export function useLists() {
 
     try {
       const { error } = await supabase
-        .from('list_members')
+        .from('list_candidates')
         .insert({
           list_id: listId,
           candidate_id: candidateId,
@@ -204,7 +204,7 @@ export function useLists() {
 
     try {
       const { error } = await supabase
-        .from('list_members')
+        .from('list_candidates')
         .delete()
         .eq('list_id', listId)
         .eq('candidate_id', candidateId);
@@ -235,7 +235,7 @@ export function useLists() {
       }));
 
       const { error } = await supabase
-        .from('list_members')
+        .from('list_candidates')
         .upsert(inserts, { onConflict: 'list_id,candidate_id' });
 
       if (error) throw error;
@@ -255,7 +255,7 @@ export function useLists() {
 
     try {
       const { data, error } = await supabase
-        .from('list_members')
+        .from('list_candidates')
         .select('id')
         .eq('list_id', listId)
         .eq('candidate_id', candidateId)
@@ -275,7 +275,7 @@ export function useLists() {
 
     try {
       const { data, error } = await supabase
-        .from('list_members')
+        .from('list_candidates')
         .select('list_id')
         .eq('candidate_id', candidateId);
 
@@ -357,7 +357,7 @@ export function useLists() {
       if (listError) throw listError;
 
       const { data: members, error: membersError } = await supabase
-        .from('list_members')
+        .from('list_candidates')
         .select(`
           *,
           candidate:candidates(*)

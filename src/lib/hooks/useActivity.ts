@@ -44,10 +44,18 @@ export function useActivity() {
         ? JSON.parse(JSON.stringify(params.metadata))
         : null;
 
+      // Derive entity_type from activity_type
+      const entityType = params.activityType.startsWith('search_') ? 'search' :
+                        params.activityType.startsWith('candidate_') ? 'candidate' :
+                        params.activityType.startsWith('list_') ? 'list' :
+                        params.activityType.startsWith('comment_') ? 'comment' : 'other';
+
       const { error } = await supabase
-        .from('activities')
+        .from('activity')
         .insert({
           user_id: user.id,
+          action: params.activityType,
+          entity_type: entityType,
           activity_type: params.activityType,
           title: params.title,
           description: params.description || null,

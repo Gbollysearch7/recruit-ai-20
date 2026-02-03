@@ -60,11 +60,16 @@ export function CandidateDetailPanel({ candidateId, websetItem, onClose, isPanel
           tags: null,
           created_at: websetItem.createdAt || null,
           updated_at: websetItem.updatedAt || null,
-          // Additional required fields from Candidate type
+          // Additional fields from Candidate type
           education: null,
           experience: null,
-          last_contacted: null,
           notes: null,
+          phone: null,
+          website: null,
+          raw_data: null,
+          search_id: null,
+          status: null,
+          exa_item_id: websetItem.id,
         };
         setCandidate(mockCandidate);
         setIsLoading(false);

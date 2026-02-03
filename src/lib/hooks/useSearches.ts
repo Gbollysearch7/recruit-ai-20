@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useCallback, useEffect } from 'react';
-import { getSupabase, type ExaSearch } from '@/lib/supabase';
+import { getSupabase, type Search } from '@/lib/supabase';
 import { useAuth } from './useAuth';
 
 interface CreateSearchParams {
@@ -23,7 +23,7 @@ interface UpdateSearchParams {
 }
 
 export function useSearches() {
-  const [searches, setSearches] = useState<ExaSearch[]>([]);
+  const [searches, setSearches] = useState<Search[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const { user, isConfigured } = useAuth();
   const supabase = getSupabase();
@@ -39,7 +39,7 @@ export function useSearches() {
     setIsLoading(true);
     try {
       const { data, error } = await supabase
-        .from('exa_searches')
+        .from('searches')
         .select('*')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false });
@@ -55,12 +55,12 @@ export function useSearches() {
   }, [supabase, user]);
 
   // Create a new search
-  const createSearch = useCallback(async (params: CreateSearchParams): Promise<ExaSearch | null> => {
+  const createSearch = useCallback(async (params: CreateSearchParams): Promise<Search | null> => {
     if (!supabase || !user) return null;
 
     try {
       const { data, error } = await supabase
-        .from('exa_searches')
+        .from('searches')
         .insert({
           user_id: user.id,
           name: params.name,
@@ -86,7 +86,7 @@ export function useSearches() {
   }, [supabase, user]);
 
   // Update a search
-  const updateSearch = useCallback(async (params: UpdateSearchParams): Promise<ExaSearch | null> => {
+  const updateSearch = useCallback(async (params: UpdateSearchParams): Promise<Search | null> => {
     if (!supabase || !user) return null;
 
     try {
@@ -98,7 +98,7 @@ export function useSearches() {
       if (params.completedAt !== undefined) updateData.completed_at = params.completedAt;
 
       const { data, error } = await supabase
-        .from('exa_searches')
+        .from('searches')
         .update(updateData)
         .eq('id', params.id)
         .eq('user_id', user.id)
@@ -122,7 +122,7 @@ export function useSearches() {
 
     try {
       const { error } = await supabase
-        .from('exa_searches')
+        .from('searches')
         .delete()
         .eq('id', id)
         .eq('user_id', user.id);
@@ -139,13 +139,13 @@ export function useSearches() {
   }, [supabase, user]);
 
   // Get a single search by ID (supports both internal id and exa_webset_id)
-  const getSearch = useCallback(async (id: string): Promise<ExaSearch | null> => {
+  const getSearch = useCallback(async (id: string): Promise<Search | null> => {
     if (!supabase) return null;
 
     try {
       // First try by exa_webset_id (most common when coming from search URLs)
       const { data: dataByWebsetId, error: websetError } = await supabase
-        .from('exa_searches')
+        .from('searches')
         .select('*')
         .eq('exa_webset_id', id)
         .maybeSingle();
@@ -156,7 +156,7 @@ export function useSearches() {
 
       // Fall back to internal id
       const { data, error } = await supabase
-        .from('exa_searches')
+        .from('searches')
         .select('*')
         .eq('id', id)
         .maybeSingle();
@@ -170,12 +170,12 @@ export function useSearches() {
   }, [supabase]);
 
   // Get a search by share ID (for shared searches)
-  const getSearchByShareId = useCallback(async (shareId: string): Promise<ExaSearch | null> => {
+  const getSearchByShareId = useCallback(async (shareId: string): Promise<Search | null> => {
     if (!supabase) return null;
 
     try {
       const { data, error } = await supabase
-        .from('exa_searches')
+        .from('searches')
         .select('*')
         .eq('share_id', shareId)
         .eq('is_public', true)
@@ -201,7 +201,7 @@ export function useSearches() {
       if (shareIdError) throw shareIdError;
 
       const { data, error } = await supabase
-        .from('exa_searches')
+        .from('searches')
         .update({ share_id: shareIdData, is_public: true })
         .eq('id', id)
         .eq('user_id', user.id)
@@ -230,7 +230,7 @@ export function useSearches() {
 
     try {
       const { data, error } = await supabase
-        .from('exa_searches')
+        .from('searches')
         .update({ share_id: null, is_public: false })
         .eq('id', id)
         .eq('user_id', user.id)
