@@ -59,8 +59,9 @@ export async function updateSession(request: NextRequest) {
     }
   );
 
-  // Refresh the session if it exists
-  await supabase.auth.getUser();
+  // Note: We intentionally don't call supabase.auth.getUser() here
+  // to avoid blocking every request with a network call.
+  // Session validation happens client-side in useAuth hook.
 
   return response;
 }

@@ -101,7 +101,7 @@ export function useAuthState(): AuthContextType {
       }
     );
 
-    // Then get the initial session
+    // Then get the initial session - fetch profile in parallel for speed
     const initAuth = async () => {
       try {
         const { data: { session: initialSession } } = await supabase.auth.getSession();
@@ -109,16 +109,19 @@ export function useAuthState(): AuthContextType {
         if (!mounted || initialSessionHandled) return;
         initialSessionHandled = true;
 
+        // Set user immediately so UI can render
         setSession(initialSession);
         setUser(initialSession?.user ?? null);
+        setIsLoading(false);
 
+        // Fetch profile in background (non-blocking)
         if (initialSession?.user) {
-          const profileData = await fetchProfile(initialSession.user.id);
-          if (mounted) setProfile(profileData);
+          fetchProfile(initialSession.user.id).then(profileData => {
+            if (mounted) setProfile(profileData);
+          });
         }
       } catch (error) {
         console.error('Error initializing auth:', error);
-      } finally {
         if (mounted) setIsLoading(false);
       }
     };
