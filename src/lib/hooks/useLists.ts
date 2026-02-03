@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { getSupabase, type List, type Candidate, type ListMember } from '@/lib/supabase';
 import { useAuth } from './useAuth';
 
@@ -25,10 +25,12 @@ export function useLists() {
   const [isLoading, setIsLoading] = useState(true);
   const { user, isConfigured } = useAuth();
   const supabase = getSupabase();
+  const userId = user?.id;
+  const hasFetched = useRef(false);
 
   // Fetch user's lists with member counts
   const fetchLists = useCallback(async () => {
-    if (!supabase || !user) {
+    if (!supabase || !userId) {
       setLists([]);
       setIsLoading(false);
       return;
@@ -42,7 +44,7 @@ export function useLists() {
           *,
           list_candidates(count)
         `)
-        .eq('user_id', user.id)
+        .eq('user_id', userId)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -60,7 +62,7 @@ export function useLists() {
     } finally {
       setIsLoading(false);
     }
-  }, [supabase, user]);
+  }, [supabase, userId]);
 
   // Create a new list
   const createList = useCallback(async (params: CreateListParams): Promise<List | null> => {
@@ -377,15 +379,20 @@ export function useLists() {
     }
   }, [supabase]);
 
-  // Fetch lists on mount and when user changes
+  // Fetch lists on mount and when user ID changes
   useEffect(() => {
-    if (isConfigured && user) {
-      fetchLists();
+    if (isConfigured && userId) {
+      // Prevent duplicate fetches
+      if (!hasFetched.current) {
+        hasFetched.current = true;
+        fetchLists();
+      }
     } else {
+      hasFetched.current = false;
       setLists([]);
       setIsLoading(false);
     }
-  }, [isConfigured, user, fetchLists]);
+  }, [isConfigured, userId, fetchLists]);
 
   return {
     lists,

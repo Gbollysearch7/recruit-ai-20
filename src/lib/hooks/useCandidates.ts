@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { getSupabase, type Candidate, type CandidateComment } from '@/lib/supabase';
 import { useAuth } from './useAuth';
 
@@ -25,10 +25,12 @@ export function useCandidates() {
   const [isLoading, setIsLoading] = useState(true);
   const { user, isConfigured } = useAuth();
   const supabase = getSupabase();
+  const userId = user?.id;
+  const hasFetched = useRef(false);
 
   // Fetch user's saved candidates
   const fetchCandidates = useCallback(async () => {
-    if (!supabase || !user) {
+    if (!supabase || !userId) {
       setCandidates([]);
       setIsLoading(false);
       return;
@@ -39,7 +41,7 @@ export function useCandidates() {
       const { data, error } = await supabase
         .from('candidates')
         .select('*')
-        .eq('user_id', user.id)
+        .eq('user_id', userId)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -50,7 +52,7 @@ export function useCandidates() {
     } finally {
       setIsLoading(false);
     }
-  }, [supabase, user]);
+  }, [supabase, userId]);
 
   // Save a candidate
   const saveCandidate = useCallback(async (params: SaveCandidateParams): Promise<Candidate | null> => {
@@ -334,15 +336,20 @@ export function useCandidates() {
     }
   }, [supabase, user]);
 
-  // Fetch candidates on mount and when user changes
+  // Fetch candidates on mount and when user ID changes
   useEffect(() => {
-    if (isConfigured && user) {
-      fetchCandidates();
+    if (isConfigured && userId) {
+      // Prevent duplicate fetches
+      if (!hasFetched.current) {
+        hasFetched.current = true;
+        fetchCandidates();
+      }
     } else {
+      hasFetched.current = false;
       setCandidates([]);
       setIsLoading(false);
     }
-  }, [isConfigured, user, fetchCandidates]);
+  }, [isConfigured, userId, fetchCandidates]);
 
   return {
     candidates,

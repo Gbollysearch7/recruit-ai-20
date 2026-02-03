@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { getSupabase, type Search } from '@/lib/supabase';
 import { useAuth } from './useAuth';
 
@@ -27,10 +27,12 @@ export function useSearches() {
   const [isLoading, setIsLoading] = useState(true);
   const { user, isConfigured } = useAuth();
   const supabase = getSupabase();
+  const userId = user?.id;
+  const hasFetched = useRef(false);
 
   // Fetch user's searches
   const fetchSearches = useCallback(async () => {
-    if (!supabase || !user) {
+    if (!supabase || !userId) {
       setSearches([]);
       setIsLoading(false);
       return;
@@ -41,7 +43,7 @@ export function useSearches() {
       const { data, error } = await supabase
         .from('searches')
         .select('*')
-        .eq('user_id', user.id)
+        .eq('user_id', userId)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -52,7 +54,7 @@ export function useSearches() {
     } finally {
       setIsLoading(false);
     }
-  }, [supabase, user]);
+  }, [supabase, userId]);
 
   // Create a new search
   const createSearch = useCallback(async (params: CreateSearchParams): Promise<Search | null> => {
@@ -248,15 +250,20 @@ export function useSearches() {
     }
   }, [supabase, user]);
 
-  // Fetch searches on mount and when user changes
+  // Fetch searches on mount and when user ID changes
   useEffect(() => {
-    if (isConfigured && user) {
-      fetchSearches();
+    if (isConfigured && userId) {
+      // Prevent duplicate fetches
+      if (!hasFetched.current) {
+        hasFetched.current = true;
+        fetchSearches();
+      }
     } else {
+      hasFetched.current = false;
       setSearches([]);
       setIsLoading(false);
     }
-  }, [isConfigured, user, fetchSearches]);
+  }, [isConfigured, userId, fetchSearches]);
 
   return {
     searches,
