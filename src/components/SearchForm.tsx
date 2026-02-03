@@ -55,15 +55,25 @@ const defaultEnrichments: CreateEnrichmentParameters[] = [
 
 // Parse number from query like "5 digital marketers" -> 5
 function parseCountFromQuery(query: string): number | null {
-  // Match patterns like "5 engineers", "10 marketers", "find 20 developers"
-  const match = query.match(/\b(\d+)\s+(?:people|persons|candidates|engineers|developers|marketers|designers|managers|analysts|scientists|specialists|professionals|experts|consultants|recruiters|salespeople|writers|editors|accountants|lawyers|doctors|nurses|teachers|coaches|trainers|administrators|executives|directors|officers|leads|seniors|juniors|interns)/i);
-  if (match) {
-    const num = parseInt(match[1], 10);
-    // Limit to reasonable range
+  // First, try to match a number at the very start of the query (most common pattern)
+  // e.g., "5 frontend developers", "10 UX researchers", "20 sales reps"
+  const startMatch = query.match(/^(\d+)\s+\w/);
+  if (startMatch) {
+    const num = parseInt(startMatch[1], 10);
     if (num >= 1 && num <= 100) {
       return num;
     }
   }
+
+  // Also match patterns like "find 5 engineers", "get 10 marketers", "search for 20 developers"
+  const findMatch = query.match(/\b(?:find|get|search|need|hire|looking for|want)\s+(\d+)\s+\w/i);
+  if (findMatch) {
+    const num = parseInt(findMatch[1], 10);
+    if (num >= 1 && num <= 100) {
+      return num;
+    }
+  }
+
   return null;
 }
 
